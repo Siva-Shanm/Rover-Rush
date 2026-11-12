@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rover Rush: Spirit Level</title>
+    <meta name="description" content="Rover Rush: Spirit Level - a 2DHD pixel-art runner telling the story of NASA's Spirit rover (MER-A). NASA Space Apps Challenge 2026.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+    <!-- Phaser canvas mounts here -->
+    <div id="game-root"></div>
+
+    <!-- HTML/DOM UI layer (z-index: 10, strictly above the canvas) -->
+    <div id="ui-layer">
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="hud-left">
+                <div id="hud-hearts" class="hearts" aria-label="Health"></div>
+                <div class="energy" aria-label="Energy">
+                    <img class="energy-empty" src="assets/ui/energy_empty.png" alt="">
+                    <img id="energy-full" class="energy-full" src="assets/ui/energy_full.png" alt="">
+                    <span id="energy-label" class="energy-label">100%</span>
+                </div>
+            </div>
+            <div class="hud-center">
+                <div class="progress">
+                    <div id="progress-fill" class="progress-fill"></div>
+                    <div class="progress-tick" style="left:25%"></div>
+                    <div class="progress-tick" style="left:50%"></div>
+                    <div class="progress-tick" style="left:75%"></div>
+                    <div id="progress-rover" class="progress-rover"></div>
+                </div>
+                <div id="progress-label" class="progress-label">0%</div>
+            </div>
+            <div class="hud-right">
+                <div id="hud-fragments" class="frag-count">DATA 0/10</div>
+                <div id="hud-status" class="status"></div>
+            </div>
+        </div>
+
+        <!-- Slow-mo tutorial prompt -->
+        <div id="tutorial" class="tutorial hidden" role="status">
+            <div class="tutorial-tag">// TRAINING SIM - TIME DILATION 25%</div>
+            <div id="tutorial-text" class="tutorial-text"></div>
+            <div id="tutorial-key" class="key-cap"></div>
+        </div>
+
+        <!-- Memory fragment pop-up -->
+        <div id="fragment" class="fragment hidden" role="status">
+            <div id="fragment-header" class="fragment-header"></div>
+            <div id="fragment-text" class="fragment-text"></div>
+        </div>
+
+        <!-- Generic modal (menu / terminal / quiz / codex / game over) -->
+        <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+            <div id="modal-panel" class="panel"></div>
+        </div>
+    </div>
+    <div class="scanlines" aria-hidden="true"></div>
+</div>
+
+<!-- Engine (CDN, pinned) -->
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<!-- Game modules (classic scripts, ordered by dependency) -->
+<script src="js/ContentDatabase.js"></script>
+<script src="js/AssetManifest.js"></script>
+<script src="js/UIController.js"></script>
+<script src="js/scenes/BootScene.js"></script>
+<script src="js/scenes/GameScene.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

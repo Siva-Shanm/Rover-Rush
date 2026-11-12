@@ -1,0 +1,38 @@
+{
+  "frameWidth": 176,
+  "frameHeight": 136,
+  "frames": [
+    "idle_0",
+    "idle_1",
+    "run_0",
+    "run_1",
+    "run_2",
+    "run_3",
+    "jump_0",
+    "slide_0",
+    "damage_0",
+    "damage_1"
+  ],
+  "poseSizes": {
+    "idle": [
+      164,
+      119
+    ],
+    "run": [
+      149,
+      111
+    ],
+    "jump": [
+      123,
+      110
+    ],
+    "slide": [
+      123,
+      120
+    ],
+    "damage": [
+      129,
+      120
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "fragment": {
+    "frameWidth": 29,
+    "frameHeight": 44,
+    "frames": 6
+  },
+  "dustdevil": {
+    "frameWidth": 191,
+    "frameHeight": 128,
+    "frames": 4
+  },
+  "silica": {
+    "frameWidth": 84,
+    "frameHeight": 64,
+    "frames": 1
+  },
+  "gate": {
+    "frameWidth": 241,
+    "frameHeight": 176,
+    "frames": 1
+  },
+  "sandtrap": {
+    "frameWidth": 182,
+    "frameHeight": 84,
+    "frames": 1
+  }
+}
