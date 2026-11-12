@@ -78,6 +78,14 @@ class UIController {
         this.$('hud-status').textContent = status || '';
     }
 
+    /** Brief red flash on the battery (e.g. slide refused: not enough charge). */
+    flashEnergy() {
+        const el = this.$('energy-label').parentElement;
+        el.classList.remove('denied');
+        void el.offsetWidth; // restart CSS animation
+        el.classList.add('denied');
+    }
+
     // ------------------------------------------------------------ tutorials
     showTutorial(tut) {
         this.$('tutorial-text').textContent = tut.text;

@@ -107,6 +107,8 @@ img { image-rendering: pixelated; }
     font-size: calc(var(--u) * 30);
     color: var(--amber);
 }
+.energy.denied { animation: denied 0.45s steps(3); }
+@keyframes denied { 0%, 66% { filter: brightness(1.6) sepia(1) hue-rotate(-40deg) saturate(4); transform: translateX(calc(var(--u) * -3)); } 33% { transform: translateX(calc(var(--u) * 3)); } }
 .energy.low .energy-label { color: var(--bad); animation: blink 0.5s steps(2) infinite; }
 
 .hud-center { width: calc(var(--u) * 420); text-align: center; }

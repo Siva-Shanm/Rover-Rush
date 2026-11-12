@@ -5,15 +5,25 @@
  *    LEVEL_MAP by percentage of LEVEL_LENGTH. There is no RNG in level layout.
  *  - Arcade physics for the rover and ground; hazards use explicit AABB tests
  *    so their hitboxes are exact and frame-rate independent.
- *  - Time dilation (tutorial 25%, memory fragment 20%) is applied uniformly to
- *    physics, tweens, timers, animations and particle emitters.
+ *  - Time dilation (tutorial 40%, memory fragment 20%) is applied uniformly to
+ *    physics, tweens, timers, animations and particle emitters. Tutorial
+ *    dilation eases in/out over 600 ms instead of snapping.
  */
-const LEVEL_LENGTH = 12000;
+const LEVEL_LENGTH = 30000;    // 2.5x the original 12,000-unit level
 const GROUND_Y = 620;          // world y of the walkable surface
 const BASE_SPEED = 300;        // px/s
 const BOOST_MULT = 1.5;        // +50% forward speed
 const SAND_MULT = 0.3;         // -70% speed in Troy sand
-const JUMP_VY = -600;
+// Variable-height jump: a tap gives a short hop; holding SPACE keeps adding
+// upward force for up to 300 ms (game time) for a higher jump.
+const JUMP_TAP_VY = -480;      // baseline hop (~145 px apex)
+const JUMP_HOLD_ACCEL = 900;   // extra upward px/s^2 while held (~310 px apex at max)
+const JUMP_HOLD_MAX_MS = 300;
+const BOOST_HOLD_MS = 500;     // hold SPACE past the jump window to boost
+const SLIDE_COST = 3;          // % battery per slide initiation
+const TUTORIAL_SPEED = 0.4;    // tutorial slow-mo game speed
+const DILATION_MS = 600;       // ease in/out duration for tutorial slow-mo
+const TUTORIAL_LEAD = 420;     // tutorial fires this many units before its hazard
 const MAX_HP = 3;
 const INVULN_MS = 1500;
 const CAMERA_LEAD = 300;       // rover screen x
@@ -23,41 +33,45 @@ const pct = (p) => (LEVEL_LENGTH * p) / 100;
 const BODY = { w: 100, h: 84, slideH: 42, ox: 38, bottom: 134 };
 
 /**
- * LEVEL_MAP - the full deterministic layout (percent of 12,000 units).
- * Required beats from the PRD are marked [PRD]; the remaining entries are
- * fixed filler that teaches/reinforces each mechanic and places the other
- * memory fragments from the content script.
+ * LEVEL_MAP - the full deterministic layout, in percent of LEVEL_LENGTH
+ * (30,000 units). Positions are percentages, so expanding the level spreads
+ * every hazard, pickup and terminal out proportionally; hazard *sizes*
+ * (crater/overhang widths, sand length, devil patrol range) are absolute units
+ * so they play the same at any level length.
+ * Required beats from the PRD are marked [PRD].
  */
 const LEVEL_MAP = {
+    // Each tutorial fires TUTORIAL_LEAD units before the first hazard of its
+    // kind and eases back to full speed once that hazard is cleared.
     tutorials: [
-        { at: 2,  id: 'crater',    clearAt: 6 },     // [PRD] 2%
-        { at: 12, id: 'silica',    clearAt: 15.8 },  // [PRD] 12%
-        { at: 27, id: 'dustDevil', clearAt: 31.5 },  // [PRD] 27%
-        { at: 52, id: 'sandTrap',  clearAt: 56.5 },  // [PRD] 52%
+        { id: 'crater',    hazard: 'craters',    index: 0 },
+        { id: 'silica',    hazard: 'overhangs',  index: 0 },
+        { id: 'dustDevil', hazard: 'dustDevils', index: 0 },
+        { id: 'sandTrap',  hazard: 'sandTraps',  index: 0 },
     ],
     craters: [
         { at: 4, w: 170 }, { at: 10, w: 180 }, { at: 22, w: 190 }, { at: 33, w: 200 },
         { at: 47, w: 190 }, { at: 70, w: 210 }, { at: 78, w: 200 }, { at: 93, w: 220 },
     ],
-    // slide-under silica; each ends >=150 units before the next crater so the jump is fair
-    overhangs: [{ at: 14 }, { at: 19 }, { at: 44 }, { at: 66.5 }, { at: 90 }],
+    overhangs: [{ at: 14 }, { at: 19 }, { at: 44 }, { at: 66.5 }, { at: 90 }],          // slide-under silica
     dustDevils: [{ at: 30, range: 90 }, { at: 37, range: 110 }, { at: 65, range: 120 }, { at: 83.2, range: 110 }], // [PRD] 30%
-    sandTraps: [{ from: 55, to: 60 }, { from: 85, to: 89 }],                     // [PRD] 55%
-    batteries: [{ at: 18 }, { at: 39 }, { at: 60.6 }, { at: 72 }, { at: 88 }],   // [PRD] 18%
+    sandTraps: [{ at: 55, len: 600 }, { at: 85, len: 480 }],                            // [PRD] 55%
+    batteries: [{ at: 18 }, { at: 39 }, { at: 60.6 }, { at: 72 }, { at: 88 }],          // [PRD] 18%
+    // 10 fragments spaced ~7-13% apart (2,100-3,900 units) for even pacing.
     fragments: [
-        { n: 1, at: 8 },                 // [PRD] 8%
-        { n: 2, at: 10.75, high: true },  // floats over the 10% crater: grab it at the jump apex
-        { n: 3, at: 24.2 },
-        { n: 5, at: 31.5 },               // between the 30% devil and the 33% crater
-        { n: 4, at: 41 },                // [PRD] 41%
-        { n: 6, at: 57.5 },
-        { n: 8, at: 73.5 },
-        { n: 9, at: 82 },                // [PRD] 82%
-        { n: 10, at: 96 },
+        { n: 1, at: 8 },                  // [PRD] 8%
+        { n: 2, at: 17, high: true },     // hold SPACE for a full-height jump to reach it
+        { n: 3, at: 24 },
+        { n: 5, at: 32 },
+        { n: 4, at: 41 },                 // [PRD] 41%
+        { n: 6, at: 52 },
+        { n: 8, at: 71.5 },
+        { n: 9, at: 82 },                 // [PRD] 82%
+        { n: 10, at: 95 },
     ],
     embeddedSilica: [{ at: 62, fragment: 7 }],   // [PRD] 62% slide over -> Fragment 7
-    checkpoints: [{ at: 25, n: 1 }, { at: 50, n: 2 }, { at: 75, n: 3 }],        // [PRD]
-    finalGate: { at: 100 },                                                       // [PRD]
+    checkpoints: [{ at: 25, n: 1 }, { at: 50, n: 2 }, { at: 75, n: 3 }],               // [PRD]
+    finalGate: { at: 100 },                                                              // [PRD]
 };
 const TOTAL_FRAGMENTS = Object.keys(ContentDatabase.fragments).length;
 
@@ -76,10 +90,14 @@ class GameScene extends Phaser.Scene {
         this.damageAnimUntil = 0;
         this.sliding = false;
         this.boosting = false;
-        this.spaceDownAt = -1;
         this.lastGroundedAt = 0;
         this.slow = { tutorial: 1, fragment: 1 };
         this.appliedScale = 1;
+        this.dilationTween = null;
+        this.jumpHolding = false;        // SPACE still held during the current jump
+        this.jumpHoldMs = 0;             // game-time ms of extra lift applied so far
+        this.spaceHoldMs = 0;            // game-time ms SPACE has been held (boost)
+        this.slideBlocked = false;       // SHIFT held but battery < SLIDE_COST
         this.activeTutorial = null;
         this.fragmentQueue = [];
         this.fragmentShowing = false;
@@ -186,7 +204,7 @@ class GameScene extends Phaser.Scene {
 
         // --- Troy sand traps ---------------------------------------------
         this.sandZones = LEVEL_MAP.sandTraps.map((z) => {
-            const x0 = pct(z.from), x1 = pct(z.to);
+            const x0 = pct(z.at), x1 = x0 + z.len;
             const fw = AssetManifest.spritesheets.sandtrap.frameWidth;
             for (let x = x0; x < x1 - fw * 0.5; x += fw - 14) {
                 this.add.image(x, GROUND_Y + 36, 'sandtrap').setOrigin(0, 1).setDepth(7);
@@ -204,7 +222,7 @@ class GameScene extends Phaser.Scene {
     }
 
     buildPickups() {
-        this.fragments = LEVEL_MAP.fragments.map((f) => this.makeFragment(pct(f.at), f.high ? GROUND_Y - 262 : GROUND_Y - 70, f.n));
+        this.fragments = LEVEL_MAP.fragments.map((f) => this.makeFragment(pct(f.at), f.high ? GROUND_Y - 290 : GROUND_Y - 70, f.n));
         this.batteries = LEVEL_MAP.batteries.map((b) => {
             const s = this.add.image(pct(b.at), GROUND_Y - 80, 'battery').setDepth(6);
             if (s.preFX && GameScene.fxEnabled()) { s.preFX.padding = 6; s.preFX.addGlow(0xffd23f, 3, 0, false, 0.1, 8); }
@@ -229,7 +247,23 @@ class GameScene extends Phaser.Scene {
         };
         this.checkpoints = LEVEL_MAP.checkpoints.map((c) => ({ x: pct(c.at), n: c.n, done: false, sprite: mk(pct(c.at)) }));
         this.finalGate = { x: pct(LEVEL_MAP.finalGate.at), done: false, sprite: mk(pct(LEVEL_MAP.finalGate.at)) };
-        this.tutorials = LEVEL_MAP.tutorials.map((t) => ({ ...t, x: pct(t.at), clearX: pct(t.clearAt), state: 'pending' }));
+        this.tutorials = LEVEL_MAP.tutorials.map((t) => {
+            const [x0, x1] = this.hazardSpan(t.hazard, t.index);
+            return { ...t, x: x0 - TUTORIAL_LEAD, clearX: x1, state: 'pending' };
+        });
+    }
+
+    /** World-x span [start, clear] of a hazard, used to bracket its tutorial. */
+    hazardSpan(kind, i) {
+        const h = LEVEL_MAP[kind][i];
+        const x = pct(h.at);
+        switch (kind) {
+            case 'craters':    return [x, x + h.w + 80];
+            case 'overhangs':  return [x, x + 176 + 80];
+            case 'dustDevils': return [x - h.range - 60, x + 160];
+            case 'sandTraps':  return [x, x + 360];        // long enough to feel the drag
+            default:           return [x, x + 200];
+        }
     }
 
     buildRover() {
@@ -329,17 +363,51 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    // Time dilation (applies to physics, tweens, timers, anims and particles)
+    // Time dilation (applies to physics, tweens, timers, anims and particles).
+    // `f` is game speed: 1 = normal, 0.4 = 40%.
     setSlow(channel, f) {
         this.slow[channel] = f;
         const s = Math.min(this.slow.tutorial, this.slow.fragment);
         if (s === this.appliedScale) return;
         this.appliedScale = s;
-        this.physics.world.timeScale = 1 / s;      // arcade: >1 = slower
-        this.tweens.timeScale = s;
+        this.physics.world.timeScale = 1 / s;      // Arcade is inverted: 2.5 = 40% speed
         this.time.timeScale = s;
+        this.tweens.timeScale = s;
         this.anims.globalTimeScale = s;
         this.emitters.forEach((em) => { em.timeScale = s; });
+    }
+
+    /**
+     * Smoothly ease the tutorial time dilation to `target` over DILATION_MS of
+     * *real* time. The driving tween lives in the same (slowed) tween manager,
+     * so its own timeScale is set to the inverse of the manager's each update.
+     */
+    tweenSlow(target, duration = DILATION_MS) {
+        if (this.dilationTween) this.dilationTween.stop();
+        const proxy = { speed: this.slow.tutorial };
+        const tw = this.tweens.add({
+            targets: proxy,
+            speed: target,
+            duration,
+            ease: 'Sine.easeInOut',
+            onUpdate: () => {
+                this.setSlow('tutorial', proxy.speed);
+                tw.timeScale = 1 / this.tweens.timeScale;
+            },
+            onComplete: () => {
+                this.setSlow('tutorial', target);
+                this.dilationTween = null;
+            },
+        });
+        tw.timeScale = 1 / this.tweens.timeScale;
+        this.dilationTween = tw;
+    }
+
+    /** Hard reset of all dilation (checkpoints, game over, finish). */
+    resetSlow() {
+        if (this.dilationTween) { this.dilationTween.stop(); this.dilationTween = null; }
+        this.setSlow('fragment', 1);
+        this.setSlow('tutorial', 1);
     }
 
     after(ms, fn) { this.realTimers.push({ at: this.realTime + ms, fn }); }
@@ -354,15 +422,19 @@ class GameScene extends Phaser.Scene {
 
     onJumpPressed() {
         if (this.state !== 'run') return;
-        this.spaceDownAt = this.realTime;
+        this.spaceHoldMs = 0;
         if (this.canJump() && !this.sliding) {
             this.lastGroundedAt = -1e9;
-            this.rover.body.setVelocityY(JUMP_VY);
+            this.rover.body.setVelocityY(JUMP_TAP_VY);   // baseline short hop
+            this.jumpHolding = true;                      // lift continues while held
+            this.jumpHoldMs = 0;
             this.energy = Math.max(0, this.energy - 4);
             this.thruster.explode(18);
             this.tutorialInput('SPACE');
         }
     }
+
+    jumpKeyHeld() { return this.keys.space.isDown || this.keys.up.isDown || this.keys.w.isDown; }
 
     tutorialInput(key) {
         const t = this.activeTutorial;
@@ -391,17 +463,45 @@ class GameScene extends Phaser.Scene {
 
         // --- abilities ---------------------------------------------------
         const shiftHeld = this.keys.shift.isDown || this.keys.down.isDown || this.keys.s.isDown;
-        const spaceHeld = this.keys.space.isDown;
-        if (!spaceHeld) this.spaceDownAt = -1;
-        const boostKey = this.keys.e.isDown || (spaceHeld && this.spaceDownAt >= 0 && this.realTime - this.spaceDownAt > 280);
+        const jumpHeld = this.jumpKeyHeld();
+        this.spaceHoldMs = jumpHeld ? this.spaceHoldMs + dt * 1000 : 0;
+
+        // Variable jump height: while SPACE stays held (max 300 ms game time) and
+        // the rover is still rising, keep applying a smaller upward force.
+        if (this.jumpHolding) {
+            if (jumpHeld && body.velocity.y < 0 && this.jumpHoldMs < JUMP_HOLD_MAX_MS) {
+                const step = Math.min(dt * 1000, JUMP_HOLD_MAX_MS - this.jumpHoldMs);
+                this.jumpHoldMs += step;
+                body.setVelocityY(body.velocity.y - JUMP_HOLD_ACCEL * (step / 1000));
+            } else {
+                this.jumpHolding = false;   // released, apex reached or 300 ms used
+            }
+        }
+
+        // Boost: E, or keep holding SPACE well past the jump window.
+        const boostKey = this.keys.e.isDown || this.spaceHoldMs > BOOST_HOLD_MS;
 
         // Slide while SHIFT is held (on the ground or as a fast-fall in the air).
-        // Not gated on `onGround`: shrinking the body can drop ground contact for
-        // one step, which would otherwise make the slide flicker on/off.
-        const wantSlide = shiftHeld;
-        if (wantSlide !== this.sliding) this.setSliding(wantSlide);
+        // Starting a slide costs SLIDE_COST % battery and is refused below that.
+        // Holding SHIFT keeps the slide going without further cost. (Not gated
+        // on `onGround`: shrinking the body can drop ground contact for one
+        // step, which would otherwise make the slide flicker on/off.)
+        if (shiftHeld && !this.sliding) {
+            if (this.energy >= SLIDE_COST) {
+                this.energy -= SLIDE_COST;
+                this.setSliding(true);
+                this.slideBlocked = false;
+            } else if (!this.slideBlocked) {
+                this.slideBlocked = true;
+                this.floatText(r.x, r.y - 80, 'LOW POWER: SLIDE OFFLINE', '#ff5a4e');
+                UI.flashEnergy();
+            }
+        } else if (!shiftHeld) {
+            if (this.sliding) this.setSliding(false);
+            this.slideBlocked = false;
+        }
         if (shiftHeld) this.tutorialInput('SHIFT');
-        if (shiftHeld && !onGround) body.setVelocityY(body.velocity.y + 1400 * dt);   // fast-fall
+        if (this.sliding && !onGround) body.setVelocityY(body.velocity.y + 1400 * dt);   // fast-fall
 
         this.boosting = boostKey && this.energy > 0;
         if (this.boosting) { this.energy = Math.max(0, this.energy - 24 * dt); this.tutorialInput('E'); }
@@ -472,12 +572,12 @@ class GameScene extends Phaser.Scene {
                 t.state = 'active';
                 this.activeTutorial = t;
                 UI.showTutorial(ContentDatabase.tutorials[t.id]);
-                this.setSlow('tutorial', 0.25);
+                this.tweenSlow(TUTORIAL_SPEED);
             } else if (t.state === 'active' && x >= t.clearX) {
                 t.state = 'done';
                 this.activeTutorial = null;
                 UI.hideTutorial();
-                this.setSlow('tutorial', 1);
+                this.tweenSlow(1);
             }
         }
     }
@@ -618,7 +718,7 @@ class GameScene extends Phaser.Scene {
         this.dust.emitting = false;
         this.thruster.emitting = false;
         UI.hideFragment(); UI.hideTutorial();
-        this.setSlow('fragment', 1); this.setSlow('tutorial', 1);
+        this.resetSlow();
         this.pushHUD(false);
         UI.showQuiz({
             onDecrypted: () => {   // the Codex unlocks once the final story is decrypted
@@ -633,7 +733,7 @@ class GameScene extends Phaser.Scene {
         this.rover.body.setVelocity(0, 0);
         this.dust.emitting = false;
         this.thruster.emitting = false;
-        this.setSlow('fragment', 1); this.setSlow('tutorial', 1);
+        this.resetSlow();
         UI.hideTutorial(); UI.hideFragment();
         this.after(700, () => UI.showGameOver({
             onRetry: () => this.respawnAtCheckpoint(),
@@ -652,13 +752,15 @@ class GameScene extends Phaser.Scene {
         this.rover.setPosition(this.respawn.x, GROUND_Y - 80);
         this.rover.body.setVelocity(0, 0);
         this.setSliding(false);
+        this.jumpHolding = false;
         this.state = 'run';
         this.pushHUD(false);
     }
 
     pushHUD(inSand) {
         let status = '';
-        if (this.silicaHint) status = 'SILICA DETECTED: SLIDE [SHIFT] TO SCRAPE';
+        if (this.slideBlocked) status = `LOW POWER: SLIDE NEEDS ${SLIDE_COST}%`;
+        else if (this.silicaHint) status = 'SILICA DETECTED: SLIDE [SHIFT] TO SCRAPE';
         else if (inSand && !this.sliding && !this.boosting) status = 'SOFT SAND: TRACTION -70%';
         else if (this.boosting) status = 'BOOST';
         UI.updateHUD({

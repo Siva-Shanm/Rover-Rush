@@ -14,9 +14,9 @@ Then open <http://localhost:8000>. Add `?fx=0` to the URL to turn off the bloom,
 
 | Key | Action |
 | --- | --- |
-| `SPACE` / `↑` / `W` | Jump (costs a little energy) |
-| `SHIFT` / `↓` / `S` | Trench-Scrape Slide (hitbox height ×0.5); fast-fall in the air |
-| `E` or hold `SPACE` | Boost: +50% speed, drains energy |
+| `SPACE` / `↑` / `W` | Jump. A tap is a short hop (~140 px); holding adds lift for up to 300 ms (~310 px) |
+| `SHIFT` / `↓` / `S` | Trench-Scrape Slide (hitbox height ×0.5). Costs 3% battery each time a slide starts and is refused below 3%. Fast-fall in the air |
+| `E`, or hold `SPACE` past 0.5 s | Boost: +50% speed, drains energy |
 
 ## Project structure
 
@@ -58,29 +58,25 @@ pip install -r tools/requirements.txt
 python3 tools/build_assets.py
 ```
 
-## Level map (12,000 units, no RNG)
+## Level map (30,000 units, no RNG)
 
-`LEVEL_MAP` in `GameScene.js` fixes the positions of everything. The beats from the PRD are tagged `[PRD]`:
+`LEVEL_MAP` in `GameScene.js` places everything by percentage of the 30,000-unit level (2.5× the original 12,000), so the whole layout spreads out evenly. Hazard sizes are absolute: crater and overhang widths, sand length and devil patrol range stay the same at any level length. The beats from the PRD are tagged `[PRD]`:
 
-- 2% crater tutorial
 - 8% Fragment 1
-- 12% slide tutorial
 - 18% battery
 - 25% Checkpoint 1
-- 27% dust-devil tutorial
 - 30% dust devil
 - 41% Fragment 4
 - 50% Checkpoint 2
-- 52% sand tutorial
 - 55% Troy sand trap
 - 62% embedded silica (slide over it to get Fragment 7)
 - 75% Checkpoint 3
 - 82% Fragment 9
 - 100% final gate, then the decryption quiz
 
-Fixed filler placements teach each mechanic and hold the other six fragments, so all 10 lines of the content script appear. This filler is: more craters, overhangs, devils and batteries, and Fragments 2, 3, 5, 6, 8 and 10.
+The 10 memory fragments sit 7–13% apart (2,100–3,900 units). Fragment 2 floats high and needs a held jump. Fixed filler placements (more craters, overhangs, devils and batteries) teach and reinforce each mechanic.
 
-Tutorials run at 25% speed until the rover clears the hazard. Memory fragments run at 20% speed for 2 s of real time. Passing the quiz unlocks the Codex on the main menu (saved in `localStorage`).
+Each tutorial fires 420 units before the first hazard of its kind. Time eases smoothly from 100% to 40% speed over 600 ms, then eases back once the hazard is cleared. Memory fragments run at 20% speed for 2 s of real time. Passing the quiz unlocks the Codex on the main menu (saved in `localStorage`).
 
 ## Asset licensing note
 
