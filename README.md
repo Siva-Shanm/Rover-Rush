@@ -14,8 +14,8 @@ Then open <http://localhost:8000>. Add `?fx=0` to the URL to turn off the bloom,
 
 | Key | Action |
 | --- | --- |
-| `SPACE` / `↑` / `W` | Jump. A tap is a short hop (~140 px); holding adds lift for up to 300 ms (~310 px) |
-| `SHIFT` / `↓` / `S` | Trench-Scrape Slide (hitbox height ×0.5). Costs 3% battery each time a slide starts and is refused below 3%. Fast-fall in the air |
+| `SPACE` / `↑` / `W` | Jump. A tap is a tight, low hop (~65 px); holding adds lift for up to 300 ms, strictly capped (~265 px) |
+| `SHIFT` / `↓` / `S` | Trench-Scrape Slide (hitbox height ×0.5). Costs a flat 15% battery each time a slide starts and is refused below 15%. Solar recharge pauses while sliding. Fast-fall in the air |
 | `E`, or hold `SPACE` past 0.5 s | Boost: +50% speed, drains energy |
 
 ## Project structure
@@ -76,7 +76,16 @@ python3 tools/build_assets.py
 
 The 10 memory fragments sit 7–13% apart (2,100–3,900 units). Fragment 2 floats high and needs a held jump. Fixed filler placements (more craters, overhangs, devils and batteries) teach and reinforce each mechanic.
 
-Each tutorial fires 420 units before the first hazard of its kind. Time eases smoothly from 100% to 40% speed over 600 ms, then eases back once the hazard is cleared. Memory fragments run at 20% speed for 2 s of real time. Passing the quiz unlocks the Codex on the main menu (saved in `localStorage`).
+Each tutorial fires 420 units before the first hazard of its kind.
+
+Time dilation has two profiles, both eased in and out smoothly:
+
+| Trigger | Speed | Ease time | Duration |
+| --- | --- | --- | --- |
+| Tutorial | 0.5× | 400 ms | until the hazard is cleared |
+| Memory fragment | 0.85× | 200 ms | 2 s of real time |
+
+Arcade physics is stepped manually once per rendered frame, using `delta / world.timeScale`. Arcade's default fixed-step mode would skip frames in slow motion and judder. Passing the quiz unlocks the Codex on the main menu (saved in `localStorage`).
 
 ## Asset licensing note
 

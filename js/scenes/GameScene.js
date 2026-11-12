@@ -5,9 +5,12 @@
  *    LEVEL_MAP by percentage of LEVEL_LENGTH. There is no RNG in level layout.
  *  - Arcade physics for the rover and ground; hazards use explicit AABB tests
  *    so their hitboxes are exact and frame-rate independent.
- *  - Time dilation (tutorial 40%, memory fragment 20%) is applied uniformly to
- *    physics, tweens, timers, animations and particle emitters. Tutorial
- *    dilation eases in/out over 600 ms instead of snapping.
+ *  - Time dilation has two profiles (see DILATION): tutorials ease to 0.5x
+ *    over 400 ms, memory fragments ease to a light 0.85x over 200 ms. It is
+ *    applied uniformly to physics, tweens, timers, animations and particles.
+ *  - Physics is stepped manually once per rendered frame with a time-scaled
+ *    delta (see stepPhysics), so slow motion stays smooth instead of Arcade's
+ *    fixed-step mode skipping frames when its timeScale is raised.
  */
 const LEVEL_LENGTH = 30000;    // 2.5x the original 12,000-unit level
 const GROUND_Y = 620;          // world y of the walkable surface
@@ -16,13 +19,17 @@ const BOOST_MULT = 1.5;        // +50% forward speed
 const SAND_MULT = 0.3;         // -70% speed in Troy sand
 // Variable-height jump: a tap gives a short hop; holding SPACE keeps adding
 // upward force for up to 300 ms (game time) for a higher jump.
-const JUMP_TAP_VY = -480;      // baseline hop (~145 px apex)
-const JUMP_HOLD_ACCEL = 900;   // extra upward px/s^2 while held (~310 px apex at max)
-const JUMP_HOLD_MAX_MS = 300;
+const JUMP_TAP_VY = -336;      // baseline hop: 30% below the old -480 (~70 px apex)
+const JUMP_HOLD_ACCEL = 1400;  // extra upward px/s^2 while held (~295 px apex at max)
+const JUMP_HOLD_MAX_MS = 300;  // hard cap on lift time (game ms)
 const BOOST_HOLD_MS = 500;     // hold SPACE past the jump window to boost
-const SLIDE_COST = 3;          // % battery per slide initiation
-const TUTORIAL_SPEED = 0.4;    // tutorial slow-mo game speed
-const DILATION_MS = 600;       // ease in/out duration for tutorial slow-mo
+const SLIDE_COST = 15;         // % battery per slide initiation (no regen while sliding)
+const SOLAR_REGEN = 2.5;       // passive % per game-second (paused while sliding)
+// Time-dilation profiles: target game speed and ease duration (real ms).
+const DILATION = {
+    tutorial: { speed: 0.5, ms: 400 },    // heavy: time to read instructions
+    fragment: { speed: 0.85, ms: 200 },   // light: keep the run flowing
+};
 const TUTORIAL_LEAD = 420;     // tutorial fires this many units before its hazard
 const MAX_HP = 3;
 const INVULN_MS = 1500;
@@ -93,7 +100,7 @@ class GameScene extends Phaser.Scene {
         this.lastGroundedAt = 0;
         this.slow = { tutorial: 1, fragment: 1 };
         this.appliedScale = 1;
-        this.dilationTween = null;
+        this.dilationTweens = { tutorial: null, fragment: null };
         this.jumpHolding = false;        // SPACE still held during the current jump
         this.jumpHoldMs = 0;             // game-time ms of extra lift applied so far
         this.spaceHoldMs = 0;            // game-time ms SPACE has been held (boost)
@@ -109,6 +116,13 @@ class GameScene extends Phaser.Scene {
     create() {
         this.cam = this.cameras.main;
         this.physics.world.setBounds(-1000, -400, LEVEL_LENGTH + 4000, 1400);
+        // We step the world ourselves (stepPhysics) with a time-scaled delta.
+        this.physics.disableUpdate();
+        this.physics.world.fixedStep = false;
+        // Camera + parallax follow the rover *after* Arcade syncs sprite
+        // positions (world.postUpdate runs on POST_UPDATE before this handler).
+        // Following in update() would track last frame's position and jitter.
+        this.events.on('postupdate', this.updateCamera, this);
 
         this.buildParallax();
         this.buildGround();
@@ -378,36 +392,54 @@ class GameScene extends Phaser.Scene {
     }
 
     /**
-     * Smoothly ease the tutorial time dilation to `target` over DILATION_MS of
-     * *real* time. The driving tween lives in the same (slowed) tween manager,
-     * so its own timeScale is set to the inverse of the manager's each update.
+     * Smoothly ease one dilation channel to `target` game speed over `duration`
+     * ms of *real* time. The driving tween lives in the same (slowed) tween
+     * manager, so its own timeScale is set to the inverse of the manager's on
+     * every update to keep the ease duration exact.
      */
-    tweenSlow(target, duration = DILATION_MS) {
-        if (this.dilationTween) this.dilationTween.stop();
-        const proxy = { speed: this.slow.tutorial };
+    tweenSlow(channel, target, duration) {
+        this.cancelSlow(channel);
+        const proxy = { speed: this.slow[channel] };
         const tw = this.tweens.add({
             targets: proxy,
             speed: target,
             duration,
             ease: 'Sine.easeInOut',
             onUpdate: () => {
-                this.setSlow('tutorial', proxy.speed);
+                this.setSlow(channel, proxy.speed);
                 tw.timeScale = 1 / this.tweens.timeScale;
             },
             onComplete: () => {
-                this.setSlow('tutorial', target);
-                this.dilationTween = null;
+                this.setSlow(channel, target);
+                this.dilationTweens[channel] = null;
             },
         });
         tw.timeScale = 1 / this.tweens.timeScale;
-        this.dilationTween = tw;
+        this.dilationTweens[channel] = tw;
+    }
+
+    cancelSlow(channel) {
+        const tw = this.dilationTweens[channel];
+        if (tw) { tw.stop(); this.dilationTweens[channel] = null; }
     }
 
     /** Hard reset of all dilation (checkpoints, game over, finish). */
     resetSlow() {
-        if (this.dilationTween) { this.dilationTween.stop(); this.dilationTween = null; }
+        this.cancelSlow('tutorial');
+        this.cancelSlow('fragment');
         this.setSlow('fragment', 1);
         this.setSlow('tutorial', 1);
+    }
+
+    /**
+     * Advance Arcade physics by exactly one step per rendered frame.
+     * `world.timeScale` (tweened via setSlow) is Arcade's inverted scale, so the
+     * game-time delta is real delta / timeScale. Stepping every frame avoids the
+     * judder of fixed-step mode, which would only step every Nth frame.
+     */
+    stepPhysics(time, dtReal) {
+        const world = this.physics.world;
+        world.update(time, dtReal / world.timeScale);
     }
 
     after(ms, fn) { this.realTimers.push({ at: this.realTime + ms, fn }); }
@@ -445,18 +477,20 @@ class GameScene extends Phaser.Scene {
 
     // ------------------------------------------------------------- update
     update(time, delta) {
-        const dtReal = Math.min(delta, 50);
+        const dtReal = Math.min(delta, 50);   // clamp hitches (tab switch etc.)
         this.realTime += dtReal;
+        this.stepPhysics(time, dtReal);
         // fire real-time timers (unaffected by slow-mo)
         for (let i = this.realTimers.length - 1; i >= 0; i--) {
             if (this.realTime >= this.realTimers[i].at) { const t = this.realTimers.splice(i, 1)[0]; t.fn(); }
         }
 
-        this.updateParallax();
         if (this.state === 'menu') { this.rover.body.setVelocityX(0); return; }
         if (this.state !== 'run') return;
 
-        const dt = (dtReal / 1000) * this.appliedScale;   // game-time seconds
+        // Game-time seconds for all custom movement/energy logic. Derived from the
+        // same world.timeScale used by stepPhysics, so both stay in lock-step.
+        const dt = dtReal / 1000 / this.physics.world.timeScale;
         const r = this.rover, body = r.body;
         const onGround = this.grounded();
         if (onGround) this.lastGroundedAt = this.realTime;
@@ -505,7 +539,8 @@ class GameScene extends Phaser.Scene {
 
         this.boosting = boostKey && this.energy > 0;
         if (this.boosting) { this.energy = Math.max(0, this.energy - 24 * dt); this.tutorialInput('E'); }
-        this.energy = Math.min(100, this.energy + 2.5 * dt);   // solar trickle charge
+        // Solar trickle charge, paused while sliding so it can't refund the cost.
+        if (!this.sliding) this.energy = Math.min(100, this.energy + SOLAR_REGEN * dt);
 
         // --- forward speed -----------------------------------------------
         let speed = BASE_SPEED * (this.boosting ? BOOST_MULT : 1);
@@ -540,11 +575,13 @@ class GameScene extends Phaser.Scene {
         // crater fall
         if (r.body.bottom > GROUND_Y + 70) this.fellInCrater();
 
-        // --- camera ------------------------------------------------------
-        this.cam.scrollX = Math.round(r.x - CAMERA_LEAD);
-
         this.hudTimer -= dtReal;
         if (this.hudTimer <= 0) { this.hudTimer = 80; this.pushHUD(inSand); }
+    }
+
+    updateCamera() {
+        if (this.state === 'run') this.cam.scrollX = Math.round(this.rover.x - CAMERA_LEAD);
+        this.updateParallax();
     }
 
     updateParallax() {
@@ -559,9 +596,20 @@ class GameScene extends Phaser.Scene {
         b.setSize(BODY.w, h, false).setOffset(BODY.ox, BODY.bottom - h);
     }
 
+    /**
+     * World y of the rover's wheel line, from the sprite (always current).
+     * Arcade only re-positions a resized body on its next step, so right after a
+     * slide starts body.y/bottom are stale for one frame.
+     */
+    roverBottom() {
+        const fh = AssetManifest.spritesheets.rover.frameHeight;
+        return this.rover.y - fh * this.rover.originY + BODY.bottom;
+    }
+
     roverRect() {
-        const b = this.rover.body;
-        return new Phaser.Geom.Rectangle(b.x, b.y, b.width, b.height);
+        const h = this.sliding ? BODY.slideH : BODY.h;
+        const left = this.rover.x - this.rover.width * this.rover.originX + BODY.ox;
+        return new Phaser.Geom.Rectangle(left, this.roverBottom() - h, BODY.w, h);
     }
 
     // ----------------------------------------------------------- tutorials
@@ -572,12 +620,12 @@ class GameScene extends Phaser.Scene {
                 t.state = 'active';
                 this.activeTutorial = t;
                 UI.showTutorial(ContentDatabase.tutorials[t.id]);
-                this.tweenSlow(TUTORIAL_SPEED);
+                this.tweenSlow('tutorial', DILATION.tutorial.speed, DILATION.tutorial.ms);
             } else if (t.state === 'active' && x >= t.clearX) {
                 t.state = 'done';
                 this.activeTutorial = null;
                 UI.hideTutorial();
-                this.tweenSlow(1);
+                this.tweenSlow('tutorial', 1, DILATION.tutorial.ms);
             }
         }
     }
@@ -643,8 +691,8 @@ class GameScene extends Phaser.Scene {
     checkPickups() {
         // Pickups use the rover's full visible silhouette (mast included),
         // so fragments/batteries are collectable while sliding or jumping.
-        const b = this.rover.body;
-        const rr = new Phaser.Geom.Rectangle(b.x - 12, b.bottom - 118, b.width + 24, 128);
+        const body = this.roverRect();
+        const rr = new Phaser.Geom.Rectangle(body.x - 12, body.bottom - 118, body.width + 24, 128);
         for (const f of this.fragments) {
             if (!f.taken && !this.collected.has(f.n) && rr.contains(f.sprite.x, f.sprite.y)) this.collectFragment(f);
             else if (!f.taken && this.collected.has(f.n)) { f.taken = true; f.sprite.destroy(); }
@@ -675,10 +723,10 @@ class GameScene extends Phaser.Scene {
         const n = this.fragmentQueue.shift();
         this.fragmentShowing = true;
         UI.showFragment(n, TOTAL_FRAGMENTS);
-        this.setSlow('fragment', 0.2);
+        this.tweenSlow('fragment', DILATION.fragment.speed, DILATION.fragment.ms);
         this.after(2000, () => {          // 2 s of *real* time
             UI.hideFragment();
-            this.setSlow('fragment', 1);
+            this.tweenSlow('fragment', 1, DILATION.fragment.ms);
             this.fragmentShowing = false;
             this.showNextFragment();
         });
@@ -699,7 +747,7 @@ class GameScene extends Phaser.Scene {
                 this.respawn = { x: cp.x + 60 };
                 // clear any slow-mo before pausing for the terminal
                 UI.hideFragment(); this.fragmentQueue = []; this.fragmentShowing = false;
-                this.setSlow('fragment', 1);
+                this.resetSlow();
                 this.pushHUD(false);
                 this.pauseFor((resume) => UI.showCheckpoint(cp.n, resume));
                 return;
