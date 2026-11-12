@@ -1,0 +1,16 @@
+# Deploy only the static game: index.html, css/, js/, assets/.
+# The Python asset pipeline is a local build tool, not a server - leaving it in
+# makes Vercel auto-detect a Python app (PYTHON_ENTRYPOINT_NOT_FOUND).
+tools/
+*.py
+requirements.txt
+pyproject.toml
+
+# Raw source art/video and docs (already baked into assets/ by the pipeline)
+*.mp4
+*.md
+Artstyle.jpeg
+Energy bar.jpeg
+Mars.jpg
+Rover_rush Spritesheet.jpeg
+Solar battery.png
