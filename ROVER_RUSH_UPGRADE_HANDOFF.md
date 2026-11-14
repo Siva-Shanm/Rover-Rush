@@ -10,7 +10,7 @@ Working handoff for the three-mission upgrade (Sojourner, Spirit V2, Opportunity
 
 | Field | Value |
 | --- | --- |
-| Last updated | 2026-11-14, Milestone 0 (inventory) |
+| Last updated | 2026-11-14, M1 done (Sojourner art), starting M2 (content) |
 | PRD | Not in the checkout. It was attached to the session as `Rover_Rush_-_Final_Claude_Code_Master_Upgrade_Prompt.md`. **Re-attach it when resuming.** |
 | Branch | `claude/clever-galileo-t5dz1n` (pushed to origin; `main` receives merges on request) |
 | Starting commit | `b15ac95` (merge of `origin/main`: new scripts and Sojourner art) |
@@ -64,8 +64,8 @@ Supporting test tooling (not in repo): Playwright + Chromium are preinstalled in
 
 ## Milestones
 
-- [ ] M0: Inventory, baseline, handoff (this file)
-- [ ] M1: Sojourner art extraction: frame/clip manifest from sheet + video
+- [x] M0: Inventory, baseline, handoff (this file)
+- [x] M1: Sojourner art extraction: frame/clip manifest from sheet + video (in-game playback check pending → M5)
 - [ ] M2: Content: corrected per-mission JSON, correction ledger, menu facts, validator
 - [ ] M3: Shared runtime: LevelManager, level JSON schema, ability registry, time coordinator, save v2 and migration, procedural texture factory
 - [ ] M4: Spirit V2 on the new runtime (layout/tuning unchanged) + regression checks
@@ -74,10 +74,28 @@ Supporting test tooling (not in repo): Playwright + Chromium are preinstalled in
 - [ ] M7: Menu: rover cards, facts, loader, personal bests
 - [ ] M8: Integration: acceptance checks, browser playthroughs, report
 
+## Sojourner frame map (M1)
+
+`tools/build_sojourner.py` → `assets/sprites/sojourner.png` (79 frames, uniform 196×163 grid) + `assets/sprites/sojourner.json` (per-frame source file/frame index/time, clips, anchor).
+
+| Clip | Source | Frames | Timing | Notes |
+| --- | --- | --- | --- | --- |
+| idle | sheet IDLE pose (60,560)-(560,980) | 1 | loop | Video idle (213–232) is static; the sheet pose is cleaner. Scaled by rover width vs video f220. |
+| run | video 288–330, every 2nd | 22 | 66.67 ms, loop | Dust trail dropped (particles do dust). Per-frame panel anchor (rover translates). |
+| jump / jumpLand | video 131–153 | 9 / 3 | 66.67 ms, once, hold last | Split at touchdown (video f149). |
+| bounce / bounceLand | video 155–209 | 24 / 4 | 66.67 ms, once, hold last | Airbags inflate → apex → squash. Split at f203. |
+| damage | video 233–263 | 16 | 66.67 ms, once | Sparks + flame; long smoke tail 265–284 replaced by pooled procedural smoke. |
+
+- Excluded: video pass 1 overlay frames 57–77, transition frames 85/286, labels on the sheet.
+- Key: magenta (`min(r,b) > 90 && g < 0.45·min(r,b)`) incl. dark-magenta shadow, then magenta despill.
+- Anchor: deep-blue panel top-centre. Jump/bounce use the idle x (video rover is horizontally static); damage is fully fixed to the idle anchor (the panel tilts).
+- Scale 0.691 of video → idle chassis (panel top → wheel bottom) = 67 px ≈ 60% of Spirit's 111 px. Cell anchor: panelTop (99,49), footY 121.
+
 ## Next action
 
-M1: Segment `Sojourner_animations.mp4` into clips (frame-diff + magenta key), build a contact sheet with frame indices, and map clips to IDLE/RUN/SHORT JUMP/AIRBAG BOUNCE/DAMAGE. Confirm by viewing the contact sheet.
+M2: Write per-mission content JSON (`assets/data/content/{sojourner,spirit,opportunity}.json`) from the three scripts with the PRD §2 corrections, the correction ledger (`docs/content-corrections.md`), the menu fact pool, and `tools/check_content.mjs` (word limits, counts, IDs, quiz refs, sources, no V1 text).
 
 ## Commands run / results
 
 - `git merge origin/main` → b15ac95 (brought in scripts + Sojourner art). OK.
+- `python3 tools/build_sojourner.py` → 79 frames 196×163, scale 0.691, footY 121. Visually checked contact sheets (all clips aligned on the foot line).
