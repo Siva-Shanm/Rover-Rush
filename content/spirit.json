@@ -1,0 +1,195 @@
+{
+  "id": "spirit",
+  "sourceScript": "rover_rush_spirit_script.md",
+  "scriptVersion": "V2",
+  "tutorials": [
+    {
+      "id": "spi-t1",
+      "slot": 1,
+      "keyCaption": "SPACE",
+      "accepts": [
+        "SPACE"
+      ],
+      "text": "Jump! Press [SPACE] to clear gaps and craters."
+    },
+    {
+      "id": "spi-t2",
+      "slot": 2,
+      "keyCaption": "SHIFT",
+      "accepts": [
+        "SHIFT"
+      ],
+      "text": "Obstacle ahead! Press [SHIFT] to Trench-Scrape Slide underneath."
+    },
+    {
+      "id": "spi-t3",
+      "slot": 3,
+      "keyCaption": "SHIFT / SPACE",
+      "accepts": [
+        "SHIFT",
+        "SPACE"
+      ],
+      "text": "Warning: Dust Devils drain health! Slide or Jump to evade."
+    },
+    {
+      "id": "spi-t4",
+      "slot": 4,
+      "keyCaption": "E / SHIFT",
+      "accepts": [
+        "E",
+        "SHIFT"
+      ],
+      "text": "Troy Sand Traps slow you down. Boost or Slide to escape!"
+    }
+  ],
+  "fragments": [
+    {
+      "id": "spi-f01",
+      "n": 1,
+      "displayText": "Landed Jan 3, 2004 at Gusev Crater, a possible former lake!"
+    },
+    {
+      "id": "spi-f02",
+      "n": 2,
+      "displayText": "Identical twin to Opportunity. Goal: search for signs of past water."
+    },
+    {
+      "id": "spi-f03",
+      "n": 3,
+      "displayText": "My landing site was named the Columbia Memorial Station."
+    },
+    {
+      "id": "spi-f04",
+      "n": 4,
+      "displayText": "Traveled 250 meters northeast to a large 200-meter-wide crater."
+    },
+    {
+      "id": "spi-f05",
+      "n": 5,
+      "displayText": "Headed toward the east hills, about 3 kilometers away."
+    },
+    {
+      "id": "spi-f06",
+      "n": 6,
+      "displayText": "Panoramic camera captured images using green, blue, and infrared filters."
+    },
+    {
+      "id": "spi-f07",
+      "n": 7,
+      "displayText": "Powered by solar panels that brave the harsh Martian elements."
+    },
+    {
+      "id": "spi-f08",
+      "n": 8,
+      "displayText": "Found evidence that water was long standing on ancient Mars."
+    },
+    {
+      "id": "spi-f09",
+      "n": 9,
+      "displayText": "Journeyed a total of 4.8 miles, or 7.7 kilometers, on Mars."
+    },
+    {
+      "id": "spi-f10",
+      "n": 10,
+      "displayText": "Last contact: March 2010. Mission formally ended in May 2011."
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "spi-cp1",
+      "slot": 1,
+      "p": 0.25,
+      "title": "CHECKPOINT 1 // THE ARRIVAL",
+      "log": "SYSTEM LOG 01: I am Spirit, one of two identical twin robots sent to Mars. I landed at Gusev Crater on Jan 3, 2004. This area is a giant impact crater and a possible former lake. My landing site is officially the Columbia Memorial Station!"
+    },
+    {
+      "id": "spi-cp2",
+      "slot": 2,
+      "p": 0.5,
+      "title": "CHECKPOINT 2 // THE GEOLOGIST",
+      "log": "SYSTEM LOG 02: I'm on the move. My current path takes me 250 meters northeast to a massive crater about 200 meters across. After that, I'm setting my sights on the east hills, which are about 3 kilometers away. My panoramic camera is capturing it all."
+    },
+    {
+      "id": "spi-cp3",
+      "slot": 3,
+      "p": 0.75,
+      "title": "CHECKPOINT 3 // THE GREAT DISCOVERY",
+      "log": "SYSTEM LOG 03: My journey is yielding incredible results. By studying the rock record across these 4.8 miles (7.7 kilometers), I've found evidence that water was long standing on the surface of Mars in ancient times. We are rewriting history!"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "spi-q1",
+      "question": "Where did Spirit land to search for signs of past water?",
+      "options": [
+        {
+          "id": "spi-q1-a",
+          "text": "Meridiani Planum"
+        },
+        {
+          "id": "spi-q1-b",
+          "text": "Gusev Crater"
+        },
+        {
+          "id": "spi-q1-c",
+          "text": "Ares Vallis"
+        }
+      ],
+      "correct": "spi-q1-b",
+      "explanation": "Check SYSTEM LOG 01: Spirit landed at Gusev Crater, a giant impact crater and possible former lake. Meridiani Planum was Opportunity's site; Ares Vallis was Pathfinder's.",
+      "taughtBy": "spi-cp1",
+      "taughtPhrase": "Gusev Crater"
+    },
+    {
+      "id": "spi-q2",
+      "question": "What was the total distance Spirit journeyed across the Martian surface?",
+      "options": [
+        {
+          "id": "spi-q2-a",
+          "text": "4.8 miles / 7.7 km"
+        },
+        {
+          "id": "spi-q2-b",
+          "text": "28.06 miles / 45.16 km"
+        },
+        {
+          "id": "spi-q2-c",
+          "text": "250 meters"
+        }
+      ],
+      "correct": "spi-q2-a",
+      "explanation": "Check SYSTEM LOG 03: Spirit studied the rock record across 4.8 miles (7.7 kilometers). 28.06 miles was Opportunity's total.",
+      "taughtBy": "spi-cp3",
+      "taughtPhrase": "4.8 miles"
+    }
+  ],
+  "codex": {
+    "file": "Archive File: MER-A (Spirit)",
+    "sections": [
+      {
+        "id": "spi-cx-profile",
+        "heading": "Mission Profile",
+        "body": "NASA’s Spirit rover was one half of an identical twin robot pair (alongside Opportunity) sent to rewrite our understanding of the early history of Mars. It landed on January 3, 2004 (PST; January 4 UTC), at Gusev Crater, a possible former lake inside a giant impact crater. Its landing site was named the Columbia Memorial Station."
+      },
+      {
+        "id": "spi-cx-journey",
+        "heading": "The Journey",
+        "body": "Spirit's early traverse included traveling 250 meters northeast to a large 200-meter-wide crater, before heading toward the east hills located about 3 kilometers away from the lander. By its last contact in March 2010, Spirit had journeyed a total of 4.8 miles (7.7 kilometers) across the Martian surface. NASA formally ended the mission in May 2011."
+      },
+      {
+        "id": "spi-cx-discoveries",
+        "heading": "Major Discoveries",
+        "body": "Spirit's primary objective was to look for signs of past water. By studying the Martian rock record, Spirit found evidence that water was long standing on the surface of Mars in ancient times."
+      },
+      {
+        "id": "spi-cx-hardware",
+        "heading": "Hardware & Imaging",
+        "body": "Spirit was equipped with a panoramic camera (Pancam) that combined data from green, blue, and infrared filters to create approximate true-color images of the Martian landscape. The rover was powered by solar panels that were visible at the front of its chassis."
+      }
+    ],
+    "notes": [
+      "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.",
+      "Jumping, the Trench-Scrape Slide, boosting and dust-devil damage are arcade abstractions. The slide is inspired by Spirit's jammed wheel scraping the soil."
+    ]
+  }
+}

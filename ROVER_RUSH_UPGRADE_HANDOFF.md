@@ -10,7 +10,7 @@ Working handoff for the three-mission upgrade (Sojourner, Spirit V2, Opportunity
 
 | Field | Value |
 | --- | --- |
-| Last updated | 2026-11-14, M1 done (Sojourner art), starting M2 (content) |
+| Last updated | 2026-11-14, M2 done (content), starting M3 (shared runtime) |
 | PRD | Not in the checkout. It was attached to the session as `Rover_Rush_-_Final_Claude_Code_Master_Upgrade_Prompt.md`. **Re-attach it when resuming.** |
 | Branch | `claude/clever-galileo-t5dz1n` (pushed to origin; `main` receives merges on request) |
 | Starting commit | `b15ac95` (merge of `origin/main`: new scripts and Sojourner art) |
@@ -66,7 +66,7 @@ Supporting test tooling (not in repo): Playwright + Chromium are preinstalled in
 
 - [x] M0: Inventory, baseline, handoff (this file)
 - [x] M1: Sojourner art extraction: frame/clip manifest from sheet + video (in-game playback check pending → M5)
-- [ ] M2: Content: corrected per-mission JSON, correction ledger, menu facts, validator
+- [x] M2: Content: corrected per-mission JSON, correction ledger, menu facts, validator (V1 runtime-text check fails until M4 replaces `js/ContentDatabase.js`, which is expected)
 - [ ] M3: Shared runtime: LevelManager, level JSON schema, ability registry, time coordinator, save v2 and migration, procedural texture factory
 - [ ] M4: Spirit V2 on the new runtime (layout/tuning unchanged) + regression checks
 - [ ] M5: Sojourner level: Airbag Bounce, intro reenactment, boulders/channel, reachability sim
@@ -91,11 +91,28 @@ Supporting test tooling (not in repo): Playwright + Chromium are preinstalled in
 - Anchor: deep-blue panel top-centre. Jump/bounce use the idle x (video rover is horizontally static); damage is fully fixed to the idle anchor (the panel tilts).
 - Scale 0.691 of video → idle chassis (panel top → wheel bottom) = 67 px ≈ 60% of Spirit's 111 px. Cell anchor: panelTop (99,49), footY 121.
 
+## Content (M2)
+
+- Reviewed strings: `content/{sojourner,spirit,opportunity}.json`. These are dev-time sources, compiled into level JSON in M3/M4; `content/` is not deployed.
+- Ledger: `content/corrections.json` (31 entries) → `docs/content-corrections.md` via `node tools/render_ledger.mjs`.
+- Menu facts: `content/facts.json` (10 facts, ≥ 1 per rover, science.nasa.gov sources) and an archive-wide dramatization note.
+- Checker: `node tools/check_content.mjs` covers verbatim-or-ledgered wording, counts, the 12-word limit, unique IDs, quiz correct-option IDs, `taughtBy` logs, official sources, facts absent from fragments, and V1 text in shipped files. It extracts the V1 strings from `git show cdd546b^:game_content_script_spirit_level.md`.
+- NASA reference pages for the PRD URLs were fetched to `<scratchpad>/md_ref/*.md`; key facts are summarised in the ledger reasons.
+
 ## Next action
 
-M2: Write per-mission content JSON (`assets/data/content/{sojourner,spirit,opportunity}.json`) from the three scripts with the PRD §2 corrections, the correction ledger (`docs/content-corrections.md`), the menu fact pool, and `tools/check_content.mjs` (word limits, counts, IDs, quiz refs, sources, no V1 text).
+M3: Create the shared runtime.
+- `js/core/LevelSchema.js`: validator, usable in Node and the browser.
+- `tools/build_levels.mjs`: content + layout → `assets/data/levels/*.json`, validating as it goes.
+- `js/core/TimeCoordinator.js`: reasons and precedence.
+- `js/core/SaveStore.js`: v2 save, migrating `roverRush.codex.MER-A`.
+- `js/core/Abilities.js`: registry.
+- `js/core/PixelTextures.js`: procedural pixel textures.
+
+Then refactor `GameScene` to read the level JSON. Check: build_levels and the validators pass, and the Spirit bot run matches the baseline.
 
 ## Commands run / results
 
 - `git merge origin/main` → b15ac95 (brought in scripts + Sojourner art). OK.
+- `node tools/check_content.mjs` → 862 assertions; only the 15 expected V1 failures (`js/ContentDatabase.js`).
 - `python3 tools/build_sojourner.py` → 79 frames 196×163, scale 0.691, footY 121. Visually checked contact sheets (all clips aligned on the foot line).

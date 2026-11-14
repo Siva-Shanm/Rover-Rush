@@ -1,0 +1,196 @@
+{
+  "id": "opportunity",
+  "sourceScript": "rover_rush_opportunity_script.md",
+  "scriptVersion": "1",
+  "tutorials": [
+    {
+      "id": "opp-t1",
+      "slot": 1,
+      "keyCaption": "SPACE",
+      "accepts": [
+        "SPACE"
+      ],
+      "text": "Press [SPACE] to leap out of Eagle Crater onto the Meridiani plains!"
+    },
+    {
+      "id": "opp-t2",
+      "slot": 2,
+      "keyCaption": "SHIFT",
+      "accepts": [
+        "SHIFT"
+      ],
+      "text": "Solar panels dusty! Press [SHIFT] for a Wind-Cleaned Solar Boost!",
+      "note": "Local Martian winds cleaned Opportunity's panels. The boost itself is an arcade ability, not a real rover capability."
+    },
+    {
+      "id": "opp-t3",
+      "slot": 3,
+      "keyCaption": "SPACE + SHIFT",
+      "accepts": [
+        "SPACE"
+      ],
+      "text": "Jump onto outcrops; combine [SPACE] and [SHIFT] across wide gaps."
+    },
+    {
+      "id": "opp-t4",
+      "slot": 4,
+      "keyCaption": "SHIFT",
+      "accepts": [
+        "SHIFT",
+        "SPACE"
+      ],
+      "text": "Storm blocks sunlight! Boost across gaps; reach the final archive."
+    }
+  ],
+  "fragments": [
+    {
+      "id": "opp-f01",
+      "n": 1,
+      "displayText": "Landed Jan. 24, 2004, at Meridiani Planum, opposite side from Spirit!"
+    },
+    {
+      "id": "opp-f02",
+      "n": 2,
+      "displayText": "Mineral deposits here suggested Mars once had a wet history."
+    },
+    {
+      "id": "opp-f03",
+      "n": 3,
+      "displayText": "Examined rock outcrops and soils right behind my landing site."
+    },
+    {
+      "id": "opp-f04",
+      "n": 4,
+      "displayText": "Successfully climbed out of Eagle Crater toward giant Endurance Crater!"
+    },
+    {
+      "id": "opp-f05",
+      "n": 5,
+      "displayText": "Captured the 558-image 'Lion King' panorama—over 75 megabytes of data!"
+    },
+    {
+      "id": "opp-f06",
+      "n": 6,
+      "displayText": "Martian winds swept dust off my solar panels, extending my life."
+    },
+    {
+      "id": "opp-f07",
+      "n": 7,
+      "displayText": "Snapped a March 2014 self-portrait showing freshly wind-cleaned solar panels."
+    },
+    {
+      "id": "opp-f08",
+      "n": 8,
+      "displayText": "Confirmed ancient water was long standing on the Martian surface."
+    },
+    {
+      "id": "opp-f09",
+      "n": 9,
+      "displayText": "Held the off-Earth roving record at 28.06 miles (45.16 kilometers)!"
+    },
+    {
+      "id": "opp-f10",
+      "n": 10,
+      "displayText": "Last communicated June 10, 2018, during a planet-wide dust storm."
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "opp-cp1",
+      "slot": 1,
+      "p": 0.25,
+      "title": "CHECKPOINT 1 // EAGLE CRATER & MERIDIANI PLANUM",
+      "log": "SYSTEM LOG 01: I am Opportunity, identical twin to Spirit. I landed on Jan. 24, 2004, at Meridiani Planum—a region rich in mineral deposits pointing to a wet Martian history. After studying the soils and rock outcrop inside Eagle Crater, I've made a successful exit onto the open plains!"
+    },
+    {
+      "id": "opp-cp2",
+      "slot": 2,
+      "p": 0.5,
+      "title": "CHECKPOINT 2 // THE LION KING PANORAMA & ENDURANCE",
+      "log": "SYSTEM LOG 02: My panoramic camera just captured 558 images—over 75 megabytes of data—to create the 'Lion King' panorama! Next stop: the massive crater dubbed 'Endurance.' Good thing local Martian winds keep sweeping dust off my solar panels so I can keep rolling."
+    },
+    {
+      "id": "opp-cp3",
+      "slot": 3,
+      "p": 0.75,
+      "title": "CHECKPOINT 3 // MARATHON RECORD & THE STORM",
+      "log": "SYSTEM LOG 03: I've accrued 28.06 miles (45.16 kilometers), setting the off-Earth roving distance record! Together with Spirit, I've confirmed water once stood on ancient Mars. Warning: a massive, planet-wide dust storm is blanketing the horizon, blocking out the sun..."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "opp-q1",
+      "question": "How far did Opportunity travel across Mars before falling silent in June 2018?",
+      "options": [
+        {
+          "id": "opp-q1-a",
+          "text": "4.8 miles (7.7 kilometers)"
+        },
+        {
+          "id": "opp-q1-b",
+          "text": "28.06 miles (45.16 kilometers)"
+        },
+        {
+          "id": "opp-q1-c",
+          "text": "1 kilometer"
+        }
+      ],
+      "correct": "opp-q1-b",
+      "explanation": "Check SYSTEM LOG 03: Opportunity accrued 28.06 miles (45.16 kilometers). 4.8 miles was Spirit's total.",
+      "taughtBy": "opp-cp3",
+      "taughtPhrase": "28.06 miles"
+    },
+    {
+      "id": "opp-q2",
+      "question": "What event accompanied Opportunity's final communication on June 10, 2018?",
+      "options": [
+        {
+          "id": "opp-q2-a",
+          "text": "Getting stuck in a soft sand trap"
+        },
+        {
+          "id": "opp-q2-b",
+          "text": "A jammed front wheel"
+        },
+        {
+          "id": "opp-q2-c",
+          "text": "A planet-wide dust storm blocking sunlight needed for solar power."
+        }
+      ],
+      "correct": "opp-q2-c",
+      "explanation": "Check SYSTEM LOG 03: a planet-wide dust storm was blocking out the sun. The sand trap and jammed wheel were Spirit's troubles.",
+      "taughtBy": "opp-cp3",
+      "taughtPhrase": "planet-wide dust storm"
+    }
+  ],
+  "codex": {
+    "file": "Archive File: MER-B (Opportunity)",
+    "sections": [
+      {
+        "id": "opp-cx-profile",
+        "heading": "Mission Profile",
+        "body": "NASA’s Opportunity rover was the identical twin to Spirit, landing on the opposite side of Mars on January 24, 2004 (PST; January 25 UTC), at Meridiani Planum—a site targeted because its mineral deposits suggested a wet Martian history. Like Spirit, its primary objective was to search for signs of past water."
+      },
+      {
+        "id": "opp-cx-lionking",
+        "heading": "Early Exploration & The \"Lion King\" Panorama",
+        "body": "Opportunity began its mission inside \"Eagle Crater,\" thoroughly examining the rock outcrop behind its lander and the surrounding soils before successfully exiting toward the large crater dubbed \"Endurance.\" On sols 58 and 60, its panoramic camera (Pancam) captured 558 images (over 75 megabytes of data) using infrared, green, and blue filters to form the famous approximate true-color \"Lion King\" panorama."
+      },
+      {
+        "id": "opp-cx-record",
+        "heading": "Endurance & Distance Record",
+        "body": "Aided by Martian winds that periodically cleaned dust off its solar panels (documented in a March 2014 self-portrait), Opportunity far outlived its original mission. By the time it fell silent, Opportunity had accrued 28.06 miles (45.16 kilometers) of driving. Opportunity set an off-world driving record; Perseverance surpassed its final distance on October 11, 2026."
+      },
+      {
+        "id": "opp-cx-final",
+        "heading": "Major Discoveries & Final Transmission",
+        "body": "By studying the Martian rock record, Opportunity and Spirit confirmed that liquid water was long standing on the surface of Mars in ancient times. Opportunity last communicated with Earth on June 10, 2018, as a planet-wide dust storm blocked the sunlight its solar panels needed. NASA declared the mission ended on February 13, 2019."
+      }
+    ],
+    "notes": [
+      "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.",
+      "\"Solar Wind Boost\" is the game ability's name. Local Martian atmospheric winds cleaned Opportunity's panels; the solar wind (particles streaming from the Sun) was not the cleaning mechanism.",
+      "Boost propulsion, jumping and the storm's visuals are arcade abstractions. Course distance is compressed narrative scale, not the real 45.16 km."
+    ]
+  }
+}
