@@ -169,12 +169,12 @@
   "coyoteMs": 90,
   "jumpHoldAccel": 0,
   "jumpHoldMaxMs": 0,
-  "cruiseSpeed": 264,
+  "cruiseSpeed": 290.4,
   "gravity": 800,
   "jumpVelocity": 222,
   "energy": {
    "max": 100,
-   "regenPerSec": 2.5,
+   "regenPerSec": 2.8,
    "jumpCost": 0,
    "dustDrain": 15
   }
@@ -221,13 +221,13 @@
     "role": "solid"
    },
    {
-    "x0": 10980,
+    "x0": 11020,
     "x1": 14300,
     "top": 620,
     "role": "solid"
    },
    {
-    "x0": 14680,
+    "x0": 14720,
     "x1": 20600,
     "top": 620,
     "role": "solid"
@@ -255,8 +255,8 @@
    "type": "pebble",
    "role": "damage",
    "x": 1400,
-   "w": 12,
-   "h": 7,
+   "w": 22,
+   "h": 12,
    "variant": 0
   },
   {
@@ -264,17 +264,17 @@
    "type": "pebble",
    "role": "damage",
    "x": 1950,
-   "w": 12,
-   "h": 7,
+   "w": 22,
+   "h": 12,
    "variant": 1
   },
   {
    "id": "soj-pebble-3",
    "type": "pebble",
    "role": "damage",
-   "x": 2250,
-   "w": 10,
-   "h": 6,
+   "x": 2200,
+   "w": 20,
+   "h": 12,
    "variant": 2
   },
   {
@@ -282,8 +282,8 @@
    "type": "pebble",
    "role": "damage",
    "x": 6300,
-   "w": 12,
-   "h": 7,
+   "w": 22,
+   "h": 12,
    "variant": 0
   },
   {
@@ -291,8 +291,8 @@
    "type": "pebble",
    "role": "damage",
    "x": 9600,
-   "w": 12,
-   "h": 7,
+   "w": 22,
+   "h": 12,
    "variant": 1
   },
   {
@@ -300,8 +300,8 @@
    "type": "pebble",
    "role": "damage",
    "x": 12900,
-   "w": 10,
-   "h": 6,
+   "w": 20,
+   "h": 12,
    "variant": 2
   },
   {
@@ -309,8 +309,8 @@
    "type": "pebble",
    "role": "damage",
    "x": 15000,
-   "w": 12,
-   "h": 7,
+   "w": 22,
+   "h": 12,
    "variant": 0
   },
   {
@@ -525,9 +525,9 @@
     "SPACE"
    ],
    "text": "Press [SPACE] for a short hop over small Martian pebbles.",
-   "triggerX": 872,
+   "triggerX": 819.2,
    "hazardX": 1400,
-   "clearX": 1492
+   "clearX": 1502
   },
   {
    "id": "soj-t2",
@@ -538,7 +538,7 @@
    ],
    "text": "Press SPACE to jump, then press SHIFT while airborne to deploy your airbags and double jump.",
    "note": "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump.",
-   "triggerX": 2372,
+   "triggerX": 2319.2,
    "hazardX": 2900,
    "clearX": 3028
   },
@@ -550,7 +550,7 @@
     "SHIFT"
    ],
    "text": "Warning: Magnetic dust drains power! Bounce high to evade.",
-   "triggerX": 5248,
+   "triggerX": 5195.2,
    "hazardX": 5776,
    "clearX": 5984
   },
@@ -562,9 +562,9 @@
     "SHIFT"
    ],
    "text": "Wide flood plain gap! Combine [SPACE] and [SHIFT] to clear it.",
-   "triggerX": 10072,
+   "triggerX": 10019.2,
    "hazardX": 10600,
-   "clearX": 11060
+   "clearX": 11100
   }
  ],
  "checkpoints": [

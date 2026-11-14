@@ -16,14 +16,16 @@ import { arc, apex, spanAbove, clears, crosses } from './sim.mjs';
 const LENGTH = 18000;
 // Round 2: base cruise x1.10 applied once here (240 -> 264 px/s); hop 0.60 J -> 0.66 J (202 -> 222 px/s)
 const ROUND1_CRUISE = Math.round(0.8 * SPIRIT.cruise);           // 240 px/s
-const PHYS = { cruiseSpeed: Math.round(ROUND1_CRUISE * 1.10), gravity: SPIRIT.gravity, jumpVelocity: Math.round(0.66 * SPIRIT.jump), jumpHoldAccel: 0, jumpHoldMaxMs: 0 };
+const ROUND2_CRUISE = Math.round(ROUND1_CRUISE * 1.10);           // 264 px/s (Round 2)
+// Round 3: a further x1.10 of the current build, applied once: 264 -> 290.4 px/s
+const PHYS = { cruiseSpeed: Math.round(ROUND2_CRUISE * 1.10 * 10) / 10, gravity: SPIRIT.gravity, jumpVelocity: Math.round(0.66 * SPIRIT.jump), jumpHoldAccel: 0, jumpHoldMaxMs: 0 };
 const ABILITY = { bounceVelocity: Math.round(1.35 * SPIRIT.jump), charges: 1 };
 const BODY_W = 56;
 
-const PEBBLES = [[1400, 12, 7], [1950, 12, 7], [2250, 10, 6], [6300, 12, 7], [9600, 12, 7], [12900, 10, 6], [15000, 12, 7]];
+const PEBBLES = [[1400, 22, 12], [1950, 22, 12], [2200, 20, 12], [6300, 22, 12], [9600, 22, 12], [12900, 20, 12], [15000, 22, 12]];   // x, w, h (Round 3: enlarged)
 const BOULDERS = [[2900, 48, 50], [3600, 56, 64], [7400, 60, 72], [11800, 64, 80], [15400, 52, 56], [16600, 48, 48]];   // x, w, h (all mandatory)
 const DUST = [[5800, 80, 48, 24], [6900, 76, 46, 24], [12400, 80, 48, 24], [16000, 76, 46, 24]];                    // x, w, plume height, drift amplitude
-const CHANNELS = [[8000, 240, 'bounce'], [10600, 380, 'combo'], [14300, 380, 'combo']];                              // x, width, intended route
+const CHANNELS = [[8000, 240, 'bounce'], [10600, 420, 'combo'], [14300, 420, 'combo']];                              // x, width, intended route
 const FRAG = { 1: [1700, 30], 2: [3628, 120], 3: [4900, 30], 4: [6560, 30], 5: [7430, 120], 6: [9500, 30], 7: [11200, 30], 8: [12455, 120], 9: [15200, 30], 10: [17200, 30] };
 
 export function build() {
@@ -58,7 +60,7 @@ export function build() {
         missionDates: { landing: 'July 4, 1997', timeConvention: 'Earth calendar date (UTC)' },
         sourceScript: c.sourceScript, sources,
         rover: sojournerRover(),
-        physics: physics({ ...PHYS, energy: { max: 100, regenPerSec: 2.5, jumpCost: 0, dustDrain: 15 } }),
+        physics: physics({ ...PHYS, energy: { max: 100, regenPerSec: 2.8, jumpCost: 0, dustDrain: 15 } /* Round 3: regen 2.5 -> 2.8 keeps the 1.3x bounce budget at the faster cruise */ }),
         ability: { id: 'airbagBounce', params: { bounceVelocity: ABILITY.bounceVelocity, charges: ABILITY.charges, airbagFxMs: 450, energyCost: 15 } },
         world: { length: LENGTH, groundY: GROUND_Y, startX, finishX, spawnX: 380, seed: 1997, killY: GROUND_Y + 90 },
         intro: { type: 'pathfinderLanding', label: 'Condensed landing reenactment', landerX: 150, rampTopX: 250, rampBottomX: 330, rampDeg: 20, bounces: 4 },

@@ -114,7 +114,15 @@ class UIController {
         cont.textContent = this.c.ui.confirmTutorial;
         cont.onclick = (ev) => { ev.preventDefault(); cont.blur(); onContinue(); };
         this.$('tutorial-hint').textContent = this.c.ui.confirmHint;
+        this._tutSec = null;
         this.$('tutorial').classList.remove('hidden');
+    }
+
+    /** "X to confirm · closes in Ns" (updates only when the second changes). */
+    setTutorialCountdown(sec) {
+        if (this._tutSec === sec) return;
+        this._tutSec = sec;
+        this.$('tutorial-hint').textContent = `${this.c.ui.confirmHint} \u00b7 closes in ${sec}s`;
     }
 
     markTutorialDone() { this.$('tutorial-key').classList.add('ok'); }

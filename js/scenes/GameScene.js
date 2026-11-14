@@ -11,6 +11,13 @@
  * Time dilation goes through TimeCoordinator; physics is stepped manually once
  * per rendered frame with delta / world.timeScale (smooth slow motion).
  */
+/**
+ * Tutorial boxes auto-dismiss after this much REAL active time (slow motion does not
+ * stretch it; pause/inactive tab suspends it), plus a little extra for long text.
+ * X and the CONFIRM button dismiss earlier through the same path (endTutorial).
+ */
+const TUTORIAL_TIMEOUT = Object.freeze({ baseMs: 6000, extraMsPerCharOver80: 40 });
+
 class GameScene extends Phaser.Scene {
     constructor() { super('GameScene'); }
 
@@ -226,7 +233,16 @@ class GameScene extends Phaser.Scene {
         const K = Phaser.Input.Keyboard.KeyCodes;
         this.keys = this.input.keyboard.addKeys({ space: K.SPACE, up: K.UP, w: K.W, shift: K.SHIFT, down: K.DOWN, s: K.S, e: K.E, enter: K.ENTER, esc: K.ESC, x: K.X });
         this.input.keyboard.addCapture([K.SPACE, K.SHIFT, K.UP, K.DOWN]);
-        this.onBlur = () => this.input.keyboard.resetKeys();
+        // Latch fresh presses from key DOWN events: JustDown() polling loses a tap whose
+        // keydown and keyup land in the same frame (Phaser's onUp clears _justDown).
+        // DOWN fires once per physical press; auto-repeat events are ignored.
+        this.edges = { jump: false, shift: false, x: false, enter: false };
+        const latch = (name) => (key, ev) => { if (!(ev && ev.repeat)) this.edges[name] = true; };
+        [this.keys.space, this.keys.up, this.keys.w].forEach((k) => k.on('down', latch('jump')));
+        [this.keys.shift, this.keys.down, this.keys.s].forEach((k) => k.on('down', latch('shift')));
+        this.keys.x.on('down', latch('x'));
+        this.keys.enter.on('down', latch('enter'));
+        this.onBlur = () => { this.input.keyboard.resetKeys(); this.edges = { jump: false, shift: false, x: false, enter: false }; };
         window.addEventListener('blur', this.onBlur);
         this.events.once('shutdown', () => window.removeEventListener('blur', this.onBlur));
     }
@@ -308,7 +324,7 @@ class GameScene extends Phaser.Scene {
     beginControl() {
         this.state = 'run';
         this.timing = true;
-        this.input.keyboard.resetKeys();
+        this.input.keyboard.resetKeys(); if (this.edges) this.edges = { jump: false, shift: false, x: false, enter: false };
         this.rover.body.enable = true;
         this.playClip('run');
     }
@@ -322,7 +338,7 @@ class GameScene extends Phaser.Scene {
         this.scene.pause();
         open(() => {
             this.input.keyboard.enableGlobalCapture();
-            this.input.keyboard.resetKeys();                // no accidental jump/ability on confirm
+            this.input.keyboard.resetKeys(); if (this.edges) this.edges = { jump: false, shift: false, x: false, enter: false };                // no accidental jump/ability on confirm
             this.state = prev;
             this.timing = prev === 'run';
             this.scene.resume();
@@ -361,7 +377,7 @@ class GameScene extends Phaser.Scene {
         UI.close();
         this.pausedByUser = false;
         this.input.keyboard.enableGlobalCapture();
-        this.input.keyboard.resetKeys();         // no input leaks from the pause menu
+        this.input.keyboard.resetKeys(); if (this.edges) this.edges = { jump: false, shift: false, x: false, enter: false };         // no input leaks from the pause menu
         this.scene.resume();                     // tutorial overlay / slow motion beneath are untouched
     }
 
@@ -423,7 +439,7 @@ class GameScene extends Phaser.Scene {
             if (this.realTime >= this.realTimers[i].at) { const t = this.realTimers.splice(i, 1)[0]; t.fn(); }
         }
         if (this.state === 'intro') {
-            if (Phaser.Input.Keyboard.JustDown(this.keys.enter)) this.finishIntro();
+            if (this.edges.enter) { this.edges.enter = false; this.finishIntro(); }
             return;
         }
         if (this.state !== 'run') return;
@@ -431,14 +447,22 @@ class GameScene extends Phaser.Scene {
         if (this.timing && delta < 250) this.playMs += delta;
 
         // tutorial confirm: fresh X press only (held/auto-repeat X never dismisses a later box)
-        if (Phaser.Input.Keyboard.JustDown(this.keys.x) && this.activeTutorial && !(this.keys.x.originalEvent && this.keys.x.originalEvent.repeat)) this.endTutorial(this.activeTutorial);
+        const edges = this.edges;
+        this.edges = { jump: false, shift: false, x: false, enter: false };      // consume this frame's presses
+        if (edges.x && this.activeTutorial) this.endTutorial(this.activeTutorial);
+        // auto-dismiss: same idempotent path; tied to the active box, so a stale deadline can never close a later one
+        const at = this.activeTutorial;
+        if (at) {
+            const left = at.expireAt - this.realTime;
+            if (left <= 0) this.endTutorial(at);
+            else UI.setTutorialCountdown(Math.ceil(left / 1000));
+        }
         const dt = dtReal / 1000 / this.physics.world.timeScale;     // game seconds (same scale as physics)
         const dtMs = dt * 1000;
         const r = this.rover, body = r.body;
         const onGround = this.grounded();
-        const JD = Phaser.Input.Keyboard.JustDown;
-        const jumpPressed = JD(this.keys.space) | JD(this.keys.up) | JD(this.keys.w);
-        const shiftPressed = JD(this.keys.shift) | JD(this.keys.down) | JD(this.keys.s);
+        const jumpPressed = edges.jump;
+        const shiftPressed = edges.shift;
         const shiftDown = this.keys.shift.isDown || this.keys.down.isDown || this.keys.s.isDown;
 
         // locomotion: genuine landing = descent onto ground after real air time
@@ -575,6 +599,10 @@ class GameScene extends Phaser.Scene {
                 t.state = 'active';
                 this.activeTutorial = t;
                 this.keys.x.reset();                      // a held X from before cannot confirm this box
+                this.edges.x = false;
+                const chars = t.text.length + (t.note ? t.note.length : 0);
+                // deadline on this tutorial object (realTime only advances while the scene runs)
+                t.expireAt = this.realTime + TUTORIAL_TIMEOUT.baseMs + Math.max(0, chars - 80) * TUTORIAL_TIMEOUT.extraMsPerCharOver80;
                 UI.showTutorial(t, () => this.endTutorial(t));
                 this.time_.set('tutorial', 0.25, 400);
             }
@@ -771,7 +799,7 @@ class GameScene extends Phaser.Scene {
         this.prevX = null;
         this.state = 'run';
         this.timing = true;                     // same attempt: keeps accrued time
-        this.input.keyboard.resetKeys();
+        this.input.keyboard.resetKeys(); if (this.edges) this.edges = { jump: false, shift: false, x: false, enter: false };
         this.pushHUD(false, false);
     }
 

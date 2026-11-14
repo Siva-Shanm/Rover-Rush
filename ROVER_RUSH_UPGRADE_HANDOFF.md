@@ -10,12 +10,40 @@ Working handoff for the three-mission upgrade (Sojourner, Spirit V2, Opportunity
 
 | Field | Value |
 | --- | --- |
-| Last updated | 2026-11-14: **Round 2 complete** (all 8 + zero-energy check), pushed to main |
+| Last updated | 2026-11-14: **Round 3 complete** (all 4 verified), pushed to branch `claude/clever-galileo-t5dz1n` (not yet merged to main) |
 | PRD | Not in the checkout. It was attached to the session as `Rover_Rush_-_Final_Claude_Code_Master_Upgrade_Prompt.md`. **Re-attach it when resuming.** |
 | Branch | `claude/clever-galileo-t5dz1n` (pushed to origin; `main` receives merges on request) |
 | Starting commit | `b15ac95` (merge of `origin/main`: new scripts and Sojourner art) |
 | Pre-existing local edits | none (clean tree at start) |
 | Last known buildable state | `b15ac95`: Spirit-only game, all checks passing (bot playthrough 3/3 HP, 10/10 fragments) |
+
+## Round 3 (4 requirements)
+
+Baseline before edits: Sojourner cruise **264 px/s**, pebbles 10–12 × 6–7 px, boost cost 30%, tutorials only closed on X or click.
+
+| # | Requirement | Status |
+| --- | --- | --- |
+| 1 | Tutorials auto-dismiss (6 s real time, +40 ms per character over 80); X, click and timeout share one idempotent `endTutorial` | done ✓ |
+| 2 | Opportunity boost visibly drains the battery gauge (30% per successful burst) | done ✓ |
+| 3 | Sojourner pebbles enlarged: 10–12 × 6–7 → 20–22 × 12 px hitbox (26 × 14 drawn, scale 1) | done ✓ |
+| 4 | Sojourner cruise 264 → 290.4 px/s (×1.10, once) | done ✓ |
+
+Files changed:
+- `js/scenes/GameScene.js`: `TUTORIAL_TIMEOUT` config near the top of the file; countdown on `realTime`, which only advances while the scene runs, so pause and blur suspend it and slow motion does not stretch it. Key presses are now latched from keydown events (`this.edges`), because Phaser's `JustDown` loses a press and release in the same frame.
+- `js/UIController.js`: "closes in Ns" hint.
+- `js/core/Abilities.js`: **root cause for #2** was a wind gust reached during an active burst instantly refilling the energy just spent. Gusts now only queue readiness while a burst is active.
+- `tools/levels/sojourner.mjs` (and the regenerated `assets/data/levels/sojourner.json`):
+  - speed 290.4 and the larger pebbles;
+  - minimal corrections to keep the build sims passing at the new speed: channels 380 → 420 px, regen 2.5 → 2.8 %/s, pebble 3 moved to x 2200.
+
+Round 3 results:
+- `node tools/build_levels.mjs`: all sims ✓. The hop clears every pebble with a minimum margin of 1.58; the takeoff window is 156 ms.
+- `node tools/check_content.mjs`: 1158 assertions, 0 failures.
+- Browser check (`<scratchpad>/round3.js`, then a Sojourner-only rerun `r3b.js`), 0 console errors. Results:
+  - #1: auto-close, speed 0.25 → 1, paused countdown frozen (6000 → 6000 ms), X, click, stale deadline and double dismissal all pass.
+  - #2: battery 80% → 50% with the fill and % updating together. Held key, cooldown, plain jump and insufficient energy add no extra charge; the gust during a burst no longer refills; jump + boost costs 30.
+  - #3 and #4: hop over pebble x 6300 with no damage; vx = 290.4 both before and after a restart.
+- The first #3/#4 failures were test artifacts: a speed sample taken before the first frame, and a teleport into dust zone x 5800.
 
 ## Round 2 (8 requirements + Opportunity zero-energy check)
 
