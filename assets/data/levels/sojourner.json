@@ -1,0 +1,699 @@
+{
+ "schemaVersion": 1,
+ "id": "sojourner",
+ "order": 1,
+ "title": "Sojourner",
+ "subtitle": "Ares Vallis, 1997",
+ "missionDates": {
+  "landing": "July 4, 1997",
+  "timeConvention": "Earth calendar date (UTC)"
+ },
+ "sourceScript": {
+  "file": "rover_rush_sojourner_script.md",
+  "version": "1"
+ },
+ "sources": [
+  "https://science.nasa.gov/mission/mars-pathfinder/",
+  "https://science.nasa.gov/blogs/perseverance-mars-rover/2026/10/12/nasas-perseverance-sets-off-world-record-for-total-distance-driven/"
+ ],
+ "rover": {
+  "id": "sojourner",
+  "texture": "sojourner",
+  "frameWidth": 196,
+  "frameHeight": 163,
+  "origin": {
+   "x": 0.5,
+   "y": 0.5
+  },
+  "displayScale": 1,
+  "body": {
+   "w": 56,
+   "h": 48,
+   "offsetX": 71,
+   "footY": 121
+  },
+  "pickupHeight": 78,
+  "clips": {
+   "idle": {
+    "frames": [
+     0
+    ],
+    "frameDurationMs": 500,
+    "repeat": -1,
+    "holdLastFrame": false
+   },
+   "run": {
+    "frames": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22
+    ],
+    "frameDurationMs": 66.67,
+    "repeat": -1,
+    "holdLastFrame": false
+   },
+   "jump": {
+    "frames": [
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31
+    ],
+    "frameDurationMs": 66.67,
+    "repeat": 0,
+    "holdLastFrame": true
+   },
+   "jumpLand": {
+    "frames": [
+     32,
+     33,
+     34
+    ],
+    "frameDurationMs": 66.67,
+    "repeat": 0,
+    "holdLastFrame": false
+   },
+   "bounce": {
+    "frames": [
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48,
+     49,
+     50,
+     51,
+     52,
+     53,
+     54,
+     55,
+     56,
+     57,
+     58
+    ],
+    "frameDurationMs": 66.67,
+    "repeat": 0,
+    "holdLastFrame": true
+   },
+   "bounceLand": {
+    "frames": [
+     59,
+     60,
+     61,
+     62
+    ],
+    "frameDurationMs": 66.67,
+    "repeat": 0,
+    "holdLastFrame": false
+   },
+   "damage": {
+    "frames": [
+     63,
+     64,
+     65,
+     66,
+     67,
+     68,
+     69,
+     70,
+     71,
+     72,
+     73,
+     74,
+     75,
+     76,
+     77,
+     78
+    ],
+    "frameDurationMs": 66.67,
+    "repeat": 0,
+    "holdLastFrame": false
+   }
+  }
+ },
+ "physics": {
+  "units": "px, px/s, px/s^2, ms",
+  "coyoteMs": 90,
+  "jumpHoldAccel": 0,
+  "jumpHoldMaxMs": 0,
+  "cruiseSpeed": 240,
+  "gravity": 800,
+  "jumpVelocity": 202,
+  "energy": {
+   "max": 100,
+   "regenPerSec": 2.5,
+   "jumpCost": 0,
+   "dustDrain": 15
+  }
+ },
+ "ability": {
+  "id": "airbagBounce",
+  "params": {
+   "bounceVelocity": 454,
+   "charges": 1,
+   "airbagFxMs": 450,
+   "energyCost": 15
+  }
+ },
+ "world": {
+  "length": 18000,
+  "groundY": 620,
+  "startX": 0,
+  "finishX": 18000,
+  "spawnX": 380,
+  "seed": 1997,
+  "killY": 710
+ },
+ "intro": {
+  "type": "pathfinderLanding",
+  "label": "Condensed landing reenactment",
+  "landerX": 150,
+  "rampTopX": 250,
+  "rampBottomX": 330,
+  "rampDeg": 20,
+  "bounces": 4
+ },
+ "terrain": {
+  "ground": [
+   {
+    "x0": -1200,
+    "x1": 8000,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 8200,
+    "x1": 10600,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 10940,
+    "x1": 14300,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 14640,
+    "x1": 20600,
+    "top": 620,
+    "role": "solid"
+   }
+  ],
+  "platforms": []
+ },
+ "safeZones": [
+  {
+   "x0": 4200,
+   "x1": 4800
+  },
+  {
+   "x0": 8700,
+   "x1": 9300
+  },
+  {
+   "x0": 13200,
+   "x1": 13800
+  }
+ ],
+ "hazards": [
+  {
+   "id": "soj-pebble-1",
+   "type": "pebble",
+   "role": "damage",
+   "x": 1400,
+   "w": 12,
+   "h": 7,
+   "variant": 0
+  },
+  {
+   "id": "soj-pebble-2",
+   "type": "pebble",
+   "role": "damage",
+   "x": 1950,
+   "w": 12,
+   "h": 7,
+   "variant": 1
+  },
+  {
+   "id": "soj-pebble-3",
+   "type": "pebble",
+   "role": "damage",
+   "x": 2400,
+   "w": 10,
+   "h": 6,
+   "variant": 2
+  },
+  {
+   "id": "soj-pebble-4",
+   "type": "pebble",
+   "role": "damage",
+   "x": 6300,
+   "w": 12,
+   "h": 7,
+   "variant": 0
+  },
+  {
+   "id": "soj-pebble-5",
+   "type": "pebble",
+   "role": "damage",
+   "x": 9600,
+   "w": 12,
+   "h": 7,
+   "variant": 1
+  },
+  {
+   "id": "soj-pebble-6",
+   "type": "pebble",
+   "role": "damage",
+   "x": 12900,
+   "w": 10,
+   "h": 6,
+   "variant": 2
+  },
+  {
+   "id": "soj-pebble-7",
+   "type": "pebble",
+   "role": "damage",
+   "x": 15000,
+   "w": 12,
+   "h": 7,
+   "variant": 0
+  },
+  {
+   "id": "soj-boulder-1",
+   "type": "boulder",
+   "role": "damage",
+   "x": 2900,
+   "w": 48,
+   "h": 50,
+   "mandatory": true,
+   "variant": 0
+  },
+  {
+   "id": "soj-boulder-2",
+   "type": "boulder",
+   "role": "damage",
+   "x": 3600,
+   "w": 56,
+   "h": 64,
+   "mandatory": true,
+   "variant": 1
+  },
+  {
+   "id": "soj-boulder-3",
+   "type": "boulder",
+   "role": "damage",
+   "x": 7400,
+   "w": 60,
+   "h": 72,
+   "mandatory": true,
+   "variant": 2
+  },
+  {
+   "id": "soj-boulder-4",
+   "type": "boulder",
+   "role": "damage",
+   "x": 11800,
+   "w": 64,
+   "h": 80,
+   "mandatory": true,
+   "variant": 3
+  },
+  {
+   "id": "soj-boulder-5",
+   "type": "boulder",
+   "role": "damage",
+   "x": 15400,
+   "w": 52,
+   "h": 56,
+   "mandatory": true,
+   "variant": 0
+  },
+  {
+   "id": "soj-boulder-6",
+   "type": "boulder",
+   "role": "damage",
+   "x": 16600,
+   "w": 48,
+   "h": 48,
+   "mandatory": true,
+   "variant": 1
+  },
+  {
+   "id": "soj-dust-1",
+   "type": "magneticDust",
+   "role": "damage",
+   "x": 5800,
+   "w": 80,
+   "y0": 572,
+   "y1": 620,
+   "drift": 24,
+   "periodMs": 3000,
+   "tickMs": 900
+  },
+  {
+   "id": "soj-dust-2",
+   "type": "magneticDust",
+   "role": "damage",
+   "x": 6900,
+   "w": 76,
+   "y0": 574,
+   "y1": 620,
+   "drift": 24,
+   "periodMs": 3000,
+   "tickMs": 900
+  },
+  {
+   "id": "soj-dust-3",
+   "type": "magneticDust",
+   "role": "damage",
+   "x": 12400,
+   "w": 80,
+   "y0": 572,
+   "y1": 620,
+   "drift": 24,
+   "periodMs": 3000,
+   "tickMs": 900
+  },
+  {
+   "id": "soj-dust-4",
+   "type": "magneticDust",
+   "role": "damage",
+   "x": 16000,
+   "w": 76,
+   "y0": 574,
+   "y1": 620,
+   "drift": 24,
+   "periodMs": 3000,
+   "tickMs": 900
+  }
+ ],
+ "landmarks": [
+  {
+   "id": "soj-pathfinder-lander",
+   "type": "pathfinderLander",
+   "role": "decoration",
+   "x": 150,
+   "label": "CARL SAGAN MEMORIAL STATION"
+  }
+ ],
+ "pickups": {
+  "fragments": [
+   {
+    "role": "pickup",
+    "id": "soj-f01",
+    "n": 1,
+    "displayText": "Launched Dec. 4, 1996. Landed safely on July 4, 1997!",
+    "x": 1700,
+    "y": 590
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f02",
+    "n": 2,
+    "displayText": "Cushioned by airbags, bouncing 15 times up to 50 feet high!",
+    "x": 3628,
+    "y": 500
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f03",
+    "n": 3,
+    "displayText": "Pathfinder bounced and rolled about 1 kilometer from first impact.",
+    "x": 4900,
+    "y": 590
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f04",
+    "n": 4,
+    "displayText": "The lander was named the Carl Sagan Memorial Station, in Ares Vallis.",
+    "x": 6560,
+    "y": 590
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f05",
+    "n": 5,
+    "displayText": "Rolled down a 20-degree ramp onto the rocky flood plain.",
+    "x": 7430,
+    "y": 500
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f06",
+    "n": 6,
+    "displayText": "Only 1 foot tall and weighing just 23 pounds!",
+    "x": 9500,
+    "y": 590
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f07",
+    "n": 7,
+    "displayText": "Found rounded pebbles, suggesting flowing water existed in Mars' past.",
+    "x": 11200,
+    "y": 590
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f08",
+    "n": 8,
+    "displayText": "The Pathfinder mission found that airborne Martian dust is magnetic!",
+    "x": 12455,
+    "y": 500
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f09",
+    "n": 9,
+    "displayText": "The Pathfinder mission observed early-morning water ice clouds in the sky.",
+    "x": 15200,
+    "y": 590
+   },
+   {
+    "role": "pickup",
+    "id": "soj-f10",
+    "n": 10,
+    "displayText": "Pathfinder mission sent 2.3 billion bits before final contact Sept. 27, 1997.",
+    "x": 17200,
+    "y": 590
+   }
+  ],
+  "batteries": []
+ },
+ "tutorials": [
+  {
+   "id": "soj-t1",
+   "slot": 1,
+   "keyCaption": "SPACE",
+   "accepts": [
+    "SPACE"
+   ],
+   "text": "Press [SPACE] for a short hop over small Martian pebbles.",
+   "triggerX": 920,
+   "hazardX": 1400,
+   "clearX": 1492
+  },
+  {
+   "id": "soj-t2",
+   "slot": 2,
+   "keyCaption": "SHIFT",
+   "accepts": [
+    "SHIFT"
+   ],
+   "text": "Tall obstacle ahead! Press [SHIFT] to deploy Airbags and bounce high!",
+   "note": "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump.",
+   "triggerX": 2420,
+   "hazardX": 2900,
+   "clearX": 3028
+  },
+  {
+   "id": "soj-t3",
+   "slot": 3,
+   "keyCaption": "SHIFT",
+   "accepts": [
+    "SHIFT"
+   ],
+   "text": "Warning: Magnetic dust drains power! Bounce high to evade.",
+   "triggerX": 5296,
+   "hazardX": 5776,
+   "clearX": 5984
+  },
+  {
+   "id": "soj-t4",
+   "slot": 4,
+   "keyCaption": "SPACE + SHIFT",
+   "accepts": [
+    "SHIFT"
+   ],
+   "text": "Wide flood plain gap! Combine [SPACE] and [SHIFT] to clear it.",
+   "triggerX": 10120,
+   "hazardX": 10600,
+   "clearX": 11020
+  }
+ ],
+ "checkpoints": [
+  {
+   "id": "soj-cp1",
+   "slot": 1,
+   "p": 0.25,
+   "title": "CHECKPOINT 1 // THE ARRIVAL",
+   "log": "SYSTEM LOG 01: I am Sojourner, the first rover to ever rove another planet! My Pathfinder lander cushioned our arrival with giant airbags—we bounced 15 times, up to 50 feet high, and rolled 1 kilometer to rest at the Carl Sagan Memorial Station in Ares Vallis.",
+   "x": 4500
+  },
+  {
+   "id": "soj-cp2",
+   "slot": 2,
+   "p": 0.5,
+   "title": "CHECKPOINT 2 // THE PIONEER",
+   "log": "SYSTEM LOG 02: Standing just 1 foot tall and weighing 23 pounds, I deployed down a 20-degree ramp into this ancient flood plain. Navigating these massive boulders takes serious verticality, so my Airbag Bounce system is keeping me moving forward!",
+   "x": 9000
+  },
+  {
+   "id": "soj-cp3",
+   "slot": 3,
+   "p": 0.75,
+   "title": "CHECKPOINT 3 // THE GREAT DISCOVERY",
+   "log": "SYSTEM LOG 03: My sensors are rewriting planetary science! I've spotted rounded pebbles that suggest water once flowed across a warmer Mars. Plus, our Pathfinder mission discovered the airborne dust is magnetic and spotted early-morning water ice clouds!",
+   "x": 13500
+  }
+ ],
+ "quiz": [
+  {
+   "id": "soj-q1",
+   "question": "How did the Mars Pathfinder lander cushion its arrival on Mars?",
+   "options": [
+    {
+     "id": "soj-q1-a",
+     "text": "Retro-rockets and skycrane"
+    },
+    {
+     "id": "soj-q1-b",
+     "text": "Airbags that bounced 15 times"
+    },
+    {
+     "id": "soj-q1-c",
+     "text": "A giant parachute only"
+    }
+   ],
+   "correct": "soj-q1-b",
+   "explanation": "Check SYSTEM LOG 01: Pathfinder's giant airbags let the lander bounce about 15 times before coming to rest.",
+   "taughtBy": "soj-cp1",
+   "taughtPhrase": "15 times"
+  },
+  {
+   "id": "soj-q2",
+   "question": "What did Sojourner's discovery of rounded pebbles in Ares Vallis suggest?",
+   "options": [
+    {
+     "id": "soj-q2-a",
+     "text": "Flowing water existed in a warmer Martian past"
+    },
+    {
+     "id": "soj-q2-b",
+     "text": "Active volcanoes were nearby"
+    },
+    {
+     "id": "soj-q2-c",
+     "text": "The ground was made of pure ice"
+    }
+   ],
+   "correct": "soj-q2-a",
+   "explanation": "Check SYSTEM LOG 03: rounded pebbles suggest water once flowed across a warmer Mars.",
+   "taughtBy": "soj-cp3",
+   "taughtPhrase": "warmer"
+  }
+ ],
+ "codex": {
+  "file": "Archive File: Mars Pathfinder & Sojourner (The Pioneers)",
+  "sections": [
+   {
+    "id": "soj-cx-profile",
+    "heading": "Mission Profile",
+    "body": "Launched on December 4, 1996, Mars Pathfinder and its rover, Sojourner, landed on July 4, 1997, in Ares Vallis—a rocky, ancient flood plain in Mars' northern hemisphere. The lander was named the Carl Sagan Memorial Station."
+   },
+   {
+    "id": "soj-cx-landing",
+    "heading": "The Landing & Hardware",
+    "body": "Pathfinder pioneered an innovative airbag landing system that bounced about 15 times—reaching up to 50 feet high—and rolled roughly 1 kilometer from its initial impact point before coming to a stop. Sojourner, standing just 1 foot tall and weighing 23 pounds, deployed down a 20-degree ramp to explore the surface."
+   },
+   {
+    "id": "soj-cx-discoveries",
+    "heading": "Major Discoveries",
+    "body": "The mission's observations of rounded pebbles suggested that flowing liquid water existed during a warmer period in Mars' past. The mission also discovered that airborne Martian dust has magnetic properties and observed early-morning clouds composed of water ice."
+   },
+   {
+    "id": "soj-cx-legacy",
+    "heading": "Mission Legacy",
+    "body": "Before its final transmission on September 27, 1997, the Pathfinder mission returned 2.3 billion bits of information, proving that low-cost mobile exploration on the Red Planet was possible."
+   }
+  ],
+  "notes": [
+   "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump.",
+   "The 2.3 billion bits and the roughly 1 kilometer of bounce-and-roll travel belong to the whole Pathfinder mission (lander and rover); Sojourner itself drove about 100 meters.",
+   "Magnetic-dust power drain, hopping and the airbag bounce are arcade abstractions, not literal rover capabilities."
+  ],
+  "archiveNotes": [
+   "SYSTEM LOG entries are dramatizations written for the game, not quotations from messages the rovers transmitted."
+  ],
+  "sources": [
+   {
+    "label": "science.nasa.gov/mission/mars-pathfinder/",
+    "url": "https://science.nasa.gov/mission/mars-pathfinder/"
+   },
+   {
+    "label": "science.nasa.gov/blogs/perseverance-mars-rover/2026/10/12/nasas-perseverance-sets-off-world-record-for-total-distance-driven/",
+    "url": "https://science.nasa.gov/blogs/perseverance-mars-rover/2026/10/12/nasas-perseverance-sets-off-world-record-for-total-distance-driven/"
+   }
+  ]
+ },
+ "theme": {
+  "id": "ares",
+  "palette": [
+   "#8c7d70",
+   "#a69688",
+   "#594d42"
+  ],
+  "sky": "#d9a35b"
+ },
+ "storm": null,
+ "hud": {
+  "energy": true,
+  "ability": "AIRBAGS"
+ }
+}

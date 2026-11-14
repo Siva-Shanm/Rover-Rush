@@ -1,350 +1,219 @@
 /**
- * GameScene - core gameplay loop.
+ * GameScene — data-driven mission runtime (Sojourner, Spirit, Opportunity).
  * ---------------------------------------------------------------------------
- *  - Deterministic level: every hazard / pickup / checkpoint is placed from
- *    LEVEL_MAP by percentage of LEVEL_LENGTH. There is no RNG in level layout.
- *  - Arcade physics for the rover and ground; hazards use explicit AABB tests
- *    so their hitboxes are exact and frame-rate independent.
- *  - Time dilation has two profiles (see DILATION): tutorials ease to 0.5x
- *    over 400 ms, memory fragments ease to a light 0.85x over 200 ms. It is
- *    applied uniformly to physics, tweens, timers, animations and particles.
- *  - Physics is stepped manually once per rendered frame with a time-scaled
- *    delta (see stepPhysics), so slow motion stays smooth instead of Arcade's
- *    fixed-step mode skipping frames when its timeScale is raised.
+ * The level JSON (compiled by tools/build_levels.mjs) supplies every number:
+ * world, terrain, hazards, physics, the rover sprite map and the single
+ * signature ability. State is kept in separate machines:
+ *   locomotion: grounded / airborne (+ genuine-landing detection)
+ *   ability:    owned by the ability object (ready / active / recharging / ...)
+ *   life:       alive / dead (+ real-time invulnerability window)
+ *   run:        intro / run / finished / over  (modal freezes pause the scene)
+ * Time dilation goes through TimeCoordinator; physics is stepped manually once
+ * per rendered frame with delta / world.timeScale (smooth slow motion).
  */
-const LEVEL_LENGTH = 30000;    // 2.5x the original 12,000-unit level
-const GROUND_Y = 620;          // world y of the walkable surface
-const BASE_SPEED = 300;        // px/s
-const BOOST_MULT = 1.5;        // +50% forward speed
-const SAND_MULT = 0.3;         // -70% speed in Troy sand
-// Variable-height jump: a tap gives a short hop; holding SPACE keeps adding
-// upward force for up to 300 ms (game time) for a higher jump.
-const JUMP_TAP_VY = -336;      // baseline hop: 30% below the old -480 (~70 px apex)
-const JUMP_HOLD_ACCEL = 1400;  // extra upward px/s^2 while held (~295 px apex at max)
-const JUMP_HOLD_MAX_MS = 300;  // hard cap on lift time (game ms)
-const BOOST_HOLD_MS = 500;     // hold SPACE past the jump window to boost
-const SLIDE_COST = 15;         // % battery per slide initiation (no regen while sliding)
-const SOLAR_REGEN = 2.5;       // passive % per game-second (paused while sliding)
-// Time-dilation profiles: target game speed and ease duration (real ms).
-const DILATION = {
-    tutorial: { speed: 0.5, ms: 400 },    // heavy: time to read instructions
-    fragment: { speed: 0.85, ms: 200 },   // light: keep the run flowing
-};
-const TUTORIAL_LEAD = 420;     // tutorial fires this many units before its hazard
-const MAX_HP = 3;
-const INVULN_MS = 1500;
-const CAMERA_LEAD = 300;       // rover screen x
-const pct = (p) => (LEVEL_LENGTH * p) / 100;
-
-// Rover hitbox (frame is 176x136, wheels touch y=134 inside the frame)
-const BODY = { w: 100, h: 84, slideH: 42, ox: 38, bottom: 134 };
-
-/**
- * LEVEL_MAP - the full deterministic layout, in percent of LEVEL_LENGTH
- * (30,000 units). Positions are percentages, so expanding the level spreads
- * every hazard, pickup and terminal out proportionally; hazard *sizes*
- * (crater/overhang widths, sand length, devil patrol range) are absolute units
- * so they play the same at any level length.
- * Required beats from the PRD are marked [PRD].
- */
-const LEVEL_MAP = {
-    // Each tutorial fires TUTORIAL_LEAD units before the first hazard of its
-    // kind and eases back to full speed once that hazard is cleared.
-    tutorials: [
-        { id: 'crater',    hazard: 'craters',    index: 0 },
-        { id: 'silica',    hazard: 'overhangs',  index: 0 },
-        { id: 'dustDevil', hazard: 'dustDevils', index: 0 },
-        { id: 'sandTrap',  hazard: 'sandTraps',  index: 0 },
-    ],
-    craters: [
-        { at: 4, w: 170 }, { at: 10, w: 180 }, { at: 22, w: 190 }, { at: 33, w: 200 },
-        { at: 47, w: 190 }, { at: 70, w: 210 }, { at: 78, w: 200 }, { at: 93, w: 220 },
-    ],
-    overhangs: [{ at: 14 }, { at: 19 }, { at: 44 }, { at: 66.5 }, { at: 90 }],          // slide-under silica
-    dustDevils: [{ at: 30, range: 90 }, { at: 37, range: 110 }, { at: 65, range: 120 }, { at: 83.2, range: 110 }], // [PRD] 30%
-    sandTraps: [{ at: 55, len: 600 }, { at: 85, len: 480 }],                            // [PRD] 55%
-    batteries: [{ at: 18 }, { at: 39 }, { at: 60.6 }, { at: 72 }, { at: 88 }],          // [PRD] 18%
-    // 10 fragments spaced ~7-13% apart (2,100-3,900 units) for even pacing.
-    fragments: [
-        { n: 1, at: 8 },                  // [PRD] 8%
-        { n: 2, at: 17, high: true },     // hold SPACE for a full-height jump to reach it
-        { n: 3, at: 24 },
-        { n: 5, at: 32 },
-        { n: 4, at: 41 },                 // [PRD] 41%
-        { n: 6, at: 52 },
-        { n: 8, at: 71.5 },
-        { n: 9, at: 82 },                 // [PRD] 82%
-        { n: 10, at: 95 },
-    ],
-    embeddedSilica: [{ at: 62, fragment: 7 }],   // [PRD] 62% slide over -> Fragment 7
-    checkpoints: [{ at: 25, n: 1 }, { at: 50, n: 2 }, { at: 75, n: 3 }],               // [PRD]
-    finalGate: { at: 100 },                                                              // [PRD]
-};
-const TOTAL_FRAGMENTS = Object.keys(ContentDatabase.fragments).length;
-
 class GameScene extends Phaser.Scene {
     constructor() { super('GameScene'); }
 
+    /** `?fx=0` disables post-processing / glow FX (low-end GPUs, software WebGL). */
+    static fxEnabled() { return new URLSearchParams(window.location.search).get('fx') !== '0'; }
+
     init(data) {
-        this.autostart = !!(data && data.autostart);
-        this.state = 'menu';             // menu | run | paused | over | finished
-        this.hp = MAX_HP;
-        this.energy = 100;
-        this.collected = new Set();
-        this.realTime = 0;               // unscaled ms since scene start
+        this.missionId = (data && data.missionId) || 'spirit';
+        this.state = 'intro';
+        this.realTime = 0;
         this.realTimers = [];
-        this.invulnUntil = 0;
-        this.damageAnimUntil = 0;
-        this.sliding = false;
-        this.boosting = false;
-        this.lastGroundedAt = 0;
-        this.slow = { tutorial: 1, fragment: 1 };
-        this.appliedScale = 1;
-        this.dilationTweens = { tutorial: null, fragment: null };
-        this.jumpHolding = false;        // SPACE still held during the current jump
-        this.jumpHoldMs = 0;             // game-time ms of extra lift applied so far
-        this.spaceHoldMs = 0;            // game-time ms SPACE has been held (boost)
-        this.slideBlocked = false;       // SHIFT held but battery < SLIDE_COST
-        this.activeTutorial = null;
+        this.emitters = [];
+        this.collected = new Set();
+        this.confirmedLogs = new Set();
         this.fragmentQueue = [];
         this.fragmentShowing = false;
-        this.respawn = { x: 140 };
+        this.invulnUntil = 0;
+        this.damageAnimUntil = 0;
+        this.lastGroundedAt = 0;
+        this.airborneMs = 0;
+        this.jumpHolding = false;
+        this.jumpHoldMs = 0;
+        this.spaceHoldMs = 0;
+        this.legacyBoosting = false;
+        this.airMode = 'fall';
+        this.landAnimUntil = 0;
+        this.prevX = null;
+        this.activeTutorial = null;
+        this.playMs = 0;                  // active-play clock for personal bests
+        this.timing = false;
+        this.finishRecorded = false;
         this.hudTimer = 0;
     }
 
     // =====================================================================
     create() {
-        this.cam = this.cameras.main;
-        this.physics.world.setBounds(-1000, -400, LEVEL_LENGTH + 4000, 1400);
-        // We step the world ourselves (stepPhysics) with a time-scaled delta.
-        this.physics.disableUpdate();
-        this.physics.world.fixedStep = false;
-        // Camera + parallax follow the rover *after* Arcade syncs sprite
-        // positions (world.postUpdate runs on POST_UPDATE before this handler).
-        // Following in update() would track last frame's position and jitter.
-        this.events.on('postupdate', this.updateCamera, this);
+        const level = this.cache.json.get(`level:${this.missionId}`);
+        const errs = LevelSchema.validate(level, { frameCounts: { rover: this.textures.get('rover').frameTotal - 1, sojourner: this.textures.get('sojourner').frameTotal - 1 } });
+        if (errs.length) { UI.showFatal(`Level '${this.missionId}' failed validation:\n` + errs.slice(0, 8).join('\n')); return; }
+        this.L = level;
+        this.P = level.physics;
+        this.W = level.world;
+        this.hp = 3;
+        this.maxHp = 3;
+        this.energy = this.P.energy ? this.P.energy.max : 100;
+        this.respawnX = this.W.spawnX;
 
-        this.buildParallax();
-        this.buildGround();
-        this.buildHazards();
-        this.buildPickups();
-        this.buildCheckpoints();
-        this.buildRover();
+        this.cam = this.cameras.main;
+        this.physics.world.setBounds(this.W.startX - 1500, -600, this.W.finishX - this.W.startX + 5000, 2000);
+        this.physics.world.gravity.y = this.P.gravity;
+        this.physics.disableUpdate();               // stepped manually in stepPhysics()
+        this.physics.world.fixedStep = false;
+
         this.buildParticles();
+        this.levelManager = new LevelManager(this, level).build();
+        this.buildPickups();
+        this.buildRover();
         this.buildFX();
         this.buildInput();
+        this.time_ = new TimeCoordinator(this, this.emitters);
+        this.ability = Abilities.create(this, level.rover.id, level.ability);
+        this.tutorials = level.tutorials.map((t) => ({ ...t, state: 'pending' }));
+        this.checkpoints = level.checkpoints.map((c) => ({ ...c, done: false }));
+        this.storm = level.storm ? this.buildStorm(level.storm) : null;
 
-        this.cam.scrollX = this.rover.x - CAMERA_LEAD;
+        this.events.on('postupdate', this.updateCamera, this);
+        this.events.once('shutdown', this.cleanup, this);
+        this.cam.scrollX = Math.round(this.rover.x - 300);
+        this.levelManager.updateParallax(this.cam.scrollX);
 
-        UI.showHUD(false);
+        UI.configureHUD({ energy: !!level.hud.energy, abilityLabel: level.hud.ability, narrative: level.hud.distanceLabel || '', checkpoints: level.checkpoints.map((c) => c.p) });
+        UI.showHUD(true);
         UI.hideTutorial();
         UI.hideFragment();
-        if (this.autostart) this.beginRun();
-        else UI.showMenu({ onStart: () => this.beginRun(), codexUnlocked: GameScene.codexUnlocked() });
-
-        this.events.once('shutdown', () => { this.anims.globalTimeScale = 1; });
+        if (level.intro) this.playIntro(level.intro); else this.beginControl();
     }
 
-    /** `?fx=0` disables post-processing / glow FX (low-end GPUs, software WebGL). */
-    static fxEnabled() {
-        return new URLSearchParams(window.location.search).get('fx') !== '0';
-    }
-
-    static codexUnlocked() {
-        try { return localStorage.getItem('roverRush.codex.MER-A') === '1'; } catch (e) { return false; }
+    cleanup() {
+        if (this.time_) this.time_.reset();
+        this.anims.globalTimeScale = 1;
+        this.events.off('postupdate', this.updateCamera, this);
+        this.realTimers = [];
+        if (this.input && this.input.keyboard) this.input.keyboard.enableGlobalCapture();
+        UI.hideTutorial(); UI.hideFragment(); UI.hideIntro(); UI.showHUD(false);
+        UI.clearFragmentQueue && UI.clearFragmentQueue();
     }
 
     // ------------------------------------------------------------ builders
-    buildParallax() {
-        // Each layer is a pixel texture drawn at x4 (2DHD chunky far-field),
-        // pinned to the camera and scrolled at its own rate.
-        const W = 1280 / 4;
-        const mk = (key, y, factor) => {
-            const h = AssetManifest.images[key].height;
-            const t = this.add.tileSprite(0, y, W, h, key).setOrigin(0, 0).setScale(4).setScrollFactor(0);
-            t.parallax = factor;
-            return t;
-        };
-        this.layers = [
-            mk('sky', -150, 0.03).setDepth(-40),        // Sky + planets
-            mk('mountains', 272, 0.12).setDepth(-30),   // Distant Gusev Crater rim
-            mk('dunes', 509, 0.32).setDepth(-20),       // Midground dunes
-        ];
+    buildRover() {
+        const R = this.L.rover;
+        this.registerClips(R);
+        const top = this.levelManager.groundTopAt(this.W.spawnX) ?? this.W.groundY;
+        const r = this.physics.add.sprite(this.W.spawnX, this.yForFoot(top), R.texture).setDepth(6).setOrigin(R.origin.x, R.origin.y).setScale(R.displayScale);
+        r.body.setMaxVelocity(4000, 2000);
+        this.rover = r;
+        this.setBodyHeight(null);
+        this.physics.add.collider(r, this.levelManager.groundGroup);
+        this.playClip('idle');
     }
 
-    buildGround() {
-        // Foreground red dirt: tiled raster strip, split by crater gaps.
-        this.craters = LEVEL_MAP.craters.map((c) => ({ x0: pct(c.at), x1: pct(c.at) + c.w }));
-        this.groundGroup = this.physics.add.staticGroup();
-        const gh = AssetManifest.images.ground.height;
-        let x = -1200;
-        const segs = [];
-        for (const c of this.craters) { segs.push([x, c.x0]); x = c.x1; }
-        segs.push([x, LEVEL_LENGTH + 2600]);
-        for (const [a, b] of segs) {
-            const ts = this.add.tileSprite(a, GROUND_Y, b - a, gh * 2, 'ground').setOrigin(0, 0).setDepth(5);
-            ts.tilePositionX = a % AssetManifest.images.ground.width;
-            this.physics.add.existing(ts, true);
-            this.groundGroup.add(ts);
-        }
-        // Crater pits: the same regolith, sunk and shadowed (drawn over the rover so it "falls in")
-        for (const c of this.craters) {
-            this.add.tileSprite(c.x0, GROUND_Y + 52, c.x1 - c.x0, gh, 'ground')
-                .setOrigin(0, 0).setTint(0x4a2018).setDepth(7);
+    /** Sprite centre y that puts the rover's foot line on ground top `y`. */
+    yForFoot(y) { const R = this.L.rover; return y - (R.body.footY - R.frameHeight * R.origin.y) * R.displayScale; }
+
+    registerClips(R) {
+        for (const [name, c] of Object.entries(R.clips)) {
+            const key = `${R.texture}:${name}`;
+            if (this.anims.exists(key)) continue;           // registered once per game instance
+            this.anims.create({
+                key, frames: this.anims.generateFrameNumbers(R.texture, { frames: c.frames }),
+                duration: undefined, frameRate: 1000 / c.frameDurationMs, repeat: c.repeat,
+            });
         }
     }
 
-    buildHazards() {
-        // --- Silica overhangs (slide under) -----------------------------
-        this.overhangs = LEVEL_MAP.overhangs.map((o) => {
-            const x = pct(o.at), w = 176;
-            const tipY = GROUND_Y - 58;                    // crystal tips
-            const slabBottom = tipY - 64;
-            this.add.tileSprite(x - 12, slabBottom - 40, w + 24, 40, 'ground').setOrigin(0, 0).setFlipY(true).setDepth(4);
-            for (let i = 0; i < 2; i++) {
-                this.add.image(x + i * 88, slabBottom - 4, 'silica').setOrigin(0, 0).setFlipY(true).setDepth(4);
-            }
-            return { rect: new Phaser.Geom.Rectangle(x + 6, slabBottom - 40, w - 12, tipY - (slabBottom - 40)) };
-        });
-
-        // --- Dust devils (moving hitbox) ---------------------------------
-        this.devils = LEVEL_MAP.dustDevils.map((d) => {
-            const x = pct(d.at);
-            const s = this.add.sprite(x, GROUND_Y + 8, 'dustdevil').setOrigin(0.5, 1).setDepth(8).setAlpha(0.95);
-            s.play('devil-spin');
-            this.tweens.add({ targets: s, x: x - d.range, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
-            return { sprite: s, rect: new Phaser.Geom.Rectangle() };
-        });
-
-        // --- Troy sand traps ---------------------------------------------
-        this.sandZones = LEVEL_MAP.sandTraps.map((z) => {
-            const x0 = pct(z.at), x1 = x0 + z.len;
-            const fw = AssetManifest.spritesheets.sandtrap.frameWidth;
-            for (let x = x0; x < x1 - fw * 0.5; x += fw - 14) {
-                this.add.image(x, GROUND_Y + 36, 'sandtrap').setOrigin(0, 1).setDepth(7);
-            }
-            return { x0, x1 };
-        });
-
-        // --- Embedded silica (slide over it to unearth Fragment 7) ------
-        this.embedded = LEVEL_MAP.embeddedSilica.map((e) => {
-            const x = pct(e.at);
-            const s = this.add.image(x, GROUND_Y + 30, 'silica').setOrigin(0.5, 1).setDepth(4);
-            if (s.preFX && GameScene.fxEnabled()) s.preFX.addGlow(0xbffcff, 2, 0, false, 0.1, 6);
-            return { x, sprite: s, fragment: e.fragment, done: false };
-        });
+    playClip(name, ignoreIfPlaying = true) {
+        const key = `${this.L.rover.texture}:${name}`;
+        if (!this.anims.exists(key)) return;
+        if (ignoreIfPlaying && this.rover.anims.currentAnim && this.rover.anims.currentAnim.key === key) return;
+        this.rover.play(key);
     }
+
+    /** null = standing body; number = shorter body anchored at the feet (Spirit slide only). */
+    setBodyHeight(h) {
+        const B = this.L.rover.body;
+        const height = h || B.h;
+        this.rover.body.setSize(B.w, height, false).setOffset(B.offsetX, B.footY - height);
+        this.bodyH = height;
+    }
+
+    roverFootY() { const R = this.L.rover; return this.rover.y + (R.body.footY - R.frameHeight * R.origin.y) * R.displayScale; }
+
+    /** Current hitbox from the sprite (always fresh; Arcade repositions a resized body next step). */
+    roverRect() {
+        const R = this.L.rover;
+        const left = this.rover.x - R.frameWidth * R.origin.x * R.displayScale + R.body.offsetX;
+        return new Phaser.Geom.Rectangle(left, this.roverFootY() - this.bodyH, R.body.w, this.bodyH);
+    }
+
+    standingRect() { const r = this.roverRect(); const h = this.L.rover.body.h; return new Phaser.Geom.Rectangle(r.x, r.bottom - h, r.width, h); }
 
     buildPickups() {
-        this.fragments = LEVEL_MAP.fragments.map((f) => this.makeFragment(pct(f.at), f.high ? GROUND_Y - 290 : GROUND_Y - 70, f.n));
-        this.batteries = LEVEL_MAP.batteries.map((b) => {
-            const s = this.add.image(pct(b.at), GROUND_Y - 80, 'battery').setDepth(6);
+        const G = this.W.groundY;
+        this.fragments = this.L.pickups.fragments.filter((f) => !f.hiddenUntil).map((f) => this.makeFragment(f, f.x, f.y));
+        this.hiddenFragments = this.L.pickups.fragments.filter((f) => f.hiddenUntil);
+        this.batteries = this.L.pickups.batteries.map((b) => {
+            const s = this.add.image(b.x, b.y, 'battery').setDepth(6);
             if (s.preFX && GameScene.fxEnabled()) { s.preFX.padding = 6; s.preFX.addGlow(0xffd23f, 3, 0, false, 0.1, 8); }
             this.tweens.add({ targets: s, y: s.y - 10, duration: 700, yoyo: true, repeat: -1, ease: 'Stepped', easeParams: [4] });
-            return { sprite: s, taken: false };
+            return { def: b, sprite: s, taken: false };
         });
+        void G;
     }
 
-    makeFragment(x, y, n) {
+    makeFragment(def, x, y) {
         const s = this.add.sprite(x, y, 'fragment').setDepth(6);
         s.play('fragment-spin');
         if (s.preFX && GameScene.fxEnabled()) { s.preFX.padding = 10; s.preFX.addGlow(0x3ff6ff, 4, 0, false, 0.1, 10); }
         this.tweens.add({ targets: s, y: y - 12, duration: 900, yoyo: true, repeat: -1, ease: 'Stepped', easeParams: [6] });
-        return { sprite: s, n, taken: false };
-    }
-
-    buildCheckpoints() {
-        const mk = (x) => {
-            const g = this.add.image(x, GROUND_Y + 4, 'gate').setOrigin(0.5, 1).setDepth(4);
-            if (g.preFX && GameScene.fxEnabled()) { g.preFX.padding = 8; g.preFX.addGlow(0x3ff6ff, 1.5, 0, false, 0.1, 6); }
-            return g;
-        };
-        this.checkpoints = LEVEL_MAP.checkpoints.map((c) => ({ x: pct(c.at), n: c.n, done: false, sprite: mk(pct(c.at)) }));
-        this.finalGate = { x: pct(LEVEL_MAP.finalGate.at), done: false, sprite: mk(pct(LEVEL_MAP.finalGate.at)) };
-        this.tutorials = LEVEL_MAP.tutorials.map((t) => {
-            const [x0, x1] = this.hazardSpan(t.hazard, t.index);
-            return { ...t, x: x0 - TUTORIAL_LEAD, clearX: x1, state: 'pending' };
-        });
-    }
-
-    /** World-x span [start, clear] of a hazard, used to bracket its tutorial. */
-    hazardSpan(kind, i) {
-        const h = LEVEL_MAP[kind][i];
-        const x = pct(h.at);
-        switch (kind) {
-            case 'craters':    return [x, x + h.w + 80];
-            case 'overhangs':  return [x, x + 176 + 80];
-            case 'dustDevils': return [x - h.range - 60, x + 160];
-            case 'sandTraps':  return [x, x + 360];        // long enough to feel the drag
-            default:           return [x, x + 200];
-        }
-    }
-
-    buildRover() {
-        const r = this.physics.add.sprite(this.respawn.x, GROUND_Y - 68, 'rover').setDepth(6);
-        r.body.setSize(BODY.w, BODY.h, false).setOffset(BODY.ox, BODY.bottom - BODY.h);
-        r.body.setMaxVelocity(2000, 1400);
-        r.play('rover-idle');
-        this.physics.add.collider(r, this.groundGroup);
-        this.rover = r;
+        return { def, sprite: s, taken: false };
     }
 
     buildParticles() {
         const common = { blendMode: 'ADD', emitting: false };
-        // Red/orange regolith kicked up by the wheels
-        this.dust = this.add.particles(0, 0, 'px4', {
-            ...common,
-            speedX: { min: -220, max: -80 }, speedY: { min: -110, max: -20 },
-            gravityY: 380, lifespan: { min: 280, max: 560 },
-            scale: { start: 1.5, end: 0.5 }, alpha: { start: 0.85, end: 0 },
-            tint: [0xd2691e, 0xff7f3f, 0xa0522d, 0xe8743b], frequency: 22, quantity: 1,
-        }).setDepth(5.9);
-        this.dust.startFollow(this.rover, -52, 60);
+        const add = (cfg, depth) => { const e = this.add.particles(0, 0, 'px4', { ...common, ...cfg }).setDepth(depth); this.emitters.push(e); return e; };
+        this.dust = add({ speedX: { min: -220, max: -80 }, speedY: { min: -110, max: -20 }, gravityY: 380, lifespan: { min: 280, max: 560 },
+            scale: { start: 1.5, end: 0.5 }, alpha: { start: 0.85, end: 0 }, tint: [0xd2691e, 0xff7f3f, 0xa0522d, 0xe8743b], frequency: 22 }, 5.9);
+        this.thruster = add({ speedX: { min: -420, max: -240 }, speedY: { min: -30, max: 60 }, lifespan: { min: 160, max: 320 }, scale: { start: 1.6, end: 0.25 },
+            alpha: { start: 1, end: 0 }, tint: [0x5fd3ff, 0x9be8ff, 0xffe066, 0xfff6c0], frequency: 10, quantity: 2 }, 5.8);
+        this.sparks = add({ speed: { min: 120, max: 320 }, angle: { min: 0, max: 360 }, gravityY: 600, lifespan: { min: 220, max: 520 },
+            scale: { start: 1.2, end: 0.3 }, alpha: { start: 1, end: 0 }, tint: [0xffff66, 0xffcc00, 0xffffff] }, 9);
+        this.dataBurst = add({ speed: { min: 80, max: 260 }, angle: { min: 0, max: 360 }, lifespan: { min: 300, max: 700 }, scale: { start: 1.4, end: 0 },
+            alpha: { start: 1, end: 0 }, tint: [0x3ff6ff, 0xb9ffff, 0xffffff] }, 9);
+        this.shards = this.add.particles(0, 0, 'px4', { emitting: false, speed: { min: 100, max: 260 }, angle: { min: 200, max: 340 }, gravityY: 700,
+            lifespan: { min: 400, max: 800 }, scale: { start: 1.5, end: 0.6 }, tint: [0xf2f2ff, 0xc9c9d6, 0x9a8f8f] }).setDepth(9);
+        this.emitters.push(this.shards);
+        this.ambient = this.add.particles(0, 0, 'px4', { x: { min: 0, max: 1400 }, y: { min: 60, max: 640 }, speedX: { min: -60, max: -20 }, speedY: { min: -6, max: 10 },
+            lifespan: 6000, scale: { min: 0.5, max: 1 }, alpha: { start: 0, end: 0.5, ease: 'Sine.inOut' }, tint: [0xffc98a, 0xff9a5c], frequency: 140, blendMode: 'ADD' })
+            .setScrollFactor(0).setDepth(9.5);
+        this.emitters.push(this.ambient);
+        // pooled procedural effects (textures cached once; bounded particle counts)
+        this.smoke = this.add.particles(0, 0, PixelTextures.puff(this, 'smoke'), { emitting: false, speedX: { min: -50, max: 10 }, speedY: { min: -70, max: -30 },
+            lifespan: { min: 500, max: 900 }, scale: { start: 1, end: 1.6 }, alpha: { start: 0.85, end: 0 }, maxParticles: 24 }).setDepth(9);
+        this.airbags = this.add.particles(0, 0, PixelTextures.puff(this, 'airbag'), { emitting: false, speed: { min: 40, max: 110 }, angle: { min: 200, max: 340 },
+            lifespan: { min: 250, max: 420 }, scale: { start: 1.6, end: 0.9 }, alpha: { start: 1, end: 0 }, maxParticles: 16 }).setDepth(7);
+        this.windTrail = this.add.particles(0, 0, PixelTextures.streak(this, 'cyan'), { emitting: false, speedX: { min: -520, max: -360 }, speedY: { min: -12, max: 12 },
+            lifespan: { min: 180, max: 320 }, alpha: { start: 0.95, end: 0 }, frequency: 16, quantity: 2, maxParticles: 40 }).setDepth(5.8);
+        this.panelGlow = this.add.particles(0, 0, PixelTextures.streak(this, 'gold'), { emitting: false, speedX: { min: -80, max: 40 }, speedY: { min: -40, max: -10 },
+            lifespan: { min: 200, max: 360 }, alpha: { start: 1, end: 0 }, frequency: 30, maxParticles: 20, blendMode: 'ADD' }).setDepth(6.5);
+        [this.smoke, this.airbags, this.windTrail, this.panelGlow].forEach((e) => this.emitters.push(e));
+    }
 
-        // Blue/yellow thruster exhaust (boost + jump)
-        this.thruster = this.add.particles(0, 0, 'px4', {
-            ...common,
-            speedX: { min: -420, max: -240 }, speedY: { min: -30, max: 60 },
-            lifespan: { min: 160, max: 320 }, scale: { start: 1.6, end: 0.25 },
-            alpha: { start: 1, end: 0 }, tint: [0x5fd3ff, 0x9be8ff, 0xffe066, 0xfff6c0], frequency: 10, quantity: 2,
-        }).setDepth(5.8);
-        this.thruster.startFollow(this.rover, -64, 18);
-
-        // Electrical yellow sparks (damage)
-        this.sparks = this.add.particles(0, 0, 'px4', {
-            ...common,
-            speed: { min: 120, max: 320 }, angle: { min: 0, max: 360 }, gravityY: 600,
-            lifespan: { min: 220, max: 520 }, scale: { start: 1.2, end: 0.3 },
-            alpha: { start: 1, end: 0 }, tint: [0xffff66, 0xffcc00, 0xffffff],
-        }).setDepth(9);
-
-        // Cyan data burst (fragments) + white silica shards
-        this.dataBurst = this.add.particles(0, 0, 'px4', {
-            ...common,
-            speed: { min: 80, max: 260 }, angle: { min: 0, max: 360 },
-            lifespan: { min: 300, max: 700 }, scale: { start: 1.4, end: 0 },
-            alpha: { start: 1, end: 0 }, tint: [0x3ff6ff, 0xb9ffff, 0xffffff],
-        }).setDepth(9);
-        this.shards = this.add.particles(0, 0, 'px4', {
-            emitting: false, speed: { min: 100, max: 260 }, angle: { min: 200, max: 340 }, gravityY: 700,
-            lifespan: { min: 400, max: 800 }, scale: { start: 1.5, end: 0.6 },
-            tint: [0xf2f2ff, 0xc9c9d6, 0x9a8f8f],
-        }).setDepth(9);
-
-        // Ambient airborne dust (screen space) for atmosphere
-        this.ambient = this.add.particles(0, 0, 'px4', {
-            x: { min: 0, max: 1400 }, y: { min: 60, max: 640 },
-            speedX: { min: -60, max: -20 }, speedY: { min: -6, max: 10 },
-            lifespan: 6000, scale: { min: 0.5, max: 1 }, alpha: { start: 0, end: 0.5, ease: 'Sine.inOut' },
-            tint: [0xffc98a, 0xff9a5c], frequency: 140, blendMode: 'ADD',
-        }).setScrollFactor(0).setDepth(9.5);
-
-        this.emitters = [this.dust, this.thruster, this.sparks, this.dataBurst, this.shards, this.ambient];
+    attachFollowers() {
+        const R = this.L.rover;
+        const footOff = (R.body.footY - R.frameHeight * R.origin.y) * R.displayScale;
+        const halfW = R.body.w / 2;
+        this.dust.startFollow(this.rover, -halfW, footOff - 4);
+        this.thruster.startFollow(this.rover, -halfW - 14, footOff - 50);
+        this.windTrail.startFollow(this.rover, -halfW - 10, footOff - 40);
+        this.panelGlow.startFollow(this.rover, 0, footOff - this.L.rover.body.h - 6);
     }
 
     buildFX() {
-        // 2DHD post-processing (WebGL only): soft bloom on bright pixels + vignette.
-        // (No tilt-shift/DOF: it blurs the play plane and breaks pixel crispness.)
+        this.attachFollowers();
         if (this.renderer.type !== Phaser.WEBGL || !this.cam.postFX || !GameScene.fxEnabled()) return;
         this.cam.postFX.addBloom(0xffffff, 1, 1, 0.6, 0.7, 4);
         this.cam.postFX.addVignette(0.5, 0.5, 0.92, 0.38);
@@ -352,469 +221,545 @@ class GameScene extends Phaser.Scene {
 
     buildInput() {
         const K = Phaser.Input.Keyboard.KeyCodes;
-        this.keys = this.input.keyboard.addKeys({ space: K.SPACE, shift: K.SHIFT, e: K.E, up: K.UP, down: K.DOWN, w: K.W, s: K.S });
-        this.input.keyboard.on('keydown-SPACE', () => this.onJumpPressed());
-        this.input.keyboard.on('keydown-UP', () => this.onJumpPressed());
-        this.input.keyboard.on('keydown-W', () => this.onJumpPressed());
-        // Don't let the DOM UI keep focus-stealing keys while playing
+        this.keys = this.input.keyboard.addKeys({ space: K.SPACE, up: K.UP, w: K.W, shift: K.SHIFT, down: K.DOWN, s: K.S, e: K.E, enter: K.ENTER, esc: K.ESC });
         this.input.keyboard.addCapture([K.SPACE, K.SHIFT, K.UP, K.DOWN]);
+        this.onBlur = () => this.input.keyboard.resetKeys();
+        window.addEventListener('blur', this.onBlur);
+        this.events.once('shutdown', () => window.removeEventListener('blur', this.onBlur));
     }
 
-    // ------------------------------------------------------------- flow
-    beginRun() {
+    /** Opportunity storm: cached dither overlay + fog (Canvas-safe) and a WebGL colour grade. */
+    buildStorm(cfg) {
+        const key = PixelTextures.stormDither(this);
+        const fog = this.add.rectangle(0, 0, 1280, 720, Phaser.Display.Color.HexStringToColor(cfg.color).color, 1).setOrigin(0).setScrollFactor(0).setDepth(40).setAlpha(0);
+        const dither = this.add.tileSprite(0, 0, 640, 360, key).setOrigin(0).setScale(2).setScrollFactor(0).setDepth(41).setAlpha(0);
+        let grade = null;
+        if (this.renderer.type === Phaser.WEBGL && this.cam.postFX && GameScene.fxEnabled()) grade = this.cam.postFX.addColorMatrix();
+        return { cfg, fog, dither, grade, blackout: 0 };
+    }
+
+    updateStorm(p) {
+        const S = this.storm;
+        const q = Phaser.Math.Clamp((p - S.cfg.startP) / (1 - S.cfg.startP), 0, 1);
+        const cap = S.cfg.maxOverlay;
+        S.fog.setAlpha(Math.max(Math.min(cap * 0.75, q * cap * 0.75), S.blackout));
+        S.dither.setAlpha(q * 0.45);
+        S.dither.tilePositionX += 0.6 + q * 2.4;
+        S.dither.tilePositionY -= 0.2;
+        if (S.grade) { S.grade.reset(); S.grade.brightness(1 - 0.25 * q, true); S.grade.sepia(true); S.grade.saturate(-0.3 * q, true); }
+        this.stormQ = q;
+    }
+
+    // ------------------------------------------------------------ flow
+    playIntro(intro) {
+        this.state = 'intro';
+        const lander = this.levelManager.L.landmarks.find((l) => l.type === 'pathfinderLander');
+        const top = this.levelManager.groundTopAt(intro.landerX) ?? this.W.groundY;
+        // condensed cinematic: airbag-wrapped lander bounces in, deflates, rover rolls down the ramp
+        if (lander && lander.sprite) lander.sprite.setVisible(false);
+        const ball = this.add.image(intro.landerX - 900, top - 420, PixelTextures.puff(this, 'airbag')).setScale(14).setDepth(8);
+        this.rover.setVisible(false);
+        this.rover.body.enable = false;
+        this.cam.scrollX = 0;
+        UI.showIntro(intro.label, () => this.finishIntro());
+        const hops = [];
+        const n = intro.bounces;
+        for (let i = 0; i < n; i++) {
+            const t = (i + 1) / n;
+            const x = intro.landerX - 900 + 900 * t;
+            hops.push({ x, y: top - 60, duration: 420, ease: 'Quad.easeIn' });
+            if (i < n - 1) hops.push({ x: x + 900 / n / 2, y: top - 60 - 260 * (1 - t), duration: 380, ease: 'Quad.easeOut' });
+        }
+        this.introTween = this.tweens.chain({
+            targets: ball, tweens: hops,
+            onComplete: () => {
+                this.tweens.add({ targets: ball, scaleY: 4, scaleX: 16, alpha: 0, duration: 500, onComplete: () => ball.destroy() });
+                if (lander && lander.sprite) lander.sprite.setVisible(true);
+                this.rover.setVisible(true);
+                this.rover.setPosition(intro.rampTopX, this.yForFoot(top - 28));
+                this.playClip('run');
+                this.introTween = this.tweens.add({ targets: this.rover, x: intro.rampBottomX + 40, y: this.yForFoot(top), duration: 1300, ease: 'Linear', onComplete: () => this.finishIntro() });
+            },
+        });
+        this.introBall = ball;
+    }
+
+    /** Skip and natural completion converge here: same clean starting state. */
+    finishIntro() {
+        if (this.state !== 'intro') return;
+        if (this.introTween) { this.introTween.stop(); this.introTween = null; }
+        if (this.introBall && this.introBall.active) this.introBall.destroy();
+        const lander = (this.L.landmarks || []).find((l) => l.type === 'pathfinderLander');
+        if (lander && lander.sprite) lander.sprite.setVisible(true);
+        UI.hideIntro();
+        const top = this.levelManager.groundTopAt(this.W.spawnX) ?? this.W.groundY;
+        this.rover.setVisible(true);
+        this.rover.body.enable = true;
+        this.rover.body.reset(this.W.spawnX, this.yForFoot(top));
+        this.beginControl();
+    }
+
+    beginControl() {
         this.state = 'run';
-        UI.showHUD(true);
-        this.rover.play('rover-run');
+        this.timing = true;
+        this.input.keyboard.resetKeys();
+        this.rover.body.enable = true;
+        this.playClip('run');
     }
 
-    pauseFor(cb) {
+    pauseFor(open) {
+        const prev = this.state;
         this.state = 'paused';
-        this.rover.body.setVelocity(0, 0);
+        this.timing = false;
+        this.rover.body.setVelocityX(0);
+        this.input.keyboard.disableGlobalCapture();      // let the DOM modal receive Space/Enter
         this.scene.pause();
-        cb(() => {
-            this.state = 'run';
+        open(() => {
+            this.input.keyboard.enableGlobalCapture();
+            this.input.keyboard.resetKeys();                // no accidental jump/ability on confirm
+            this.state = prev;
+            this.timing = prev === 'run';
             this.scene.resume();
         });
     }
 
-    // Time dilation (applies to physics, tweens, timers, anims and particles).
-    // `f` is game speed: 1 = normal, 0.4 = 40%.
-    setSlow(channel, f) {
-        this.slow[channel] = f;
-        const s = Math.min(this.slow.tutorial, this.slow.fragment);
-        if (s === this.appliedScale) return;
-        this.appliedScale = s;
-        this.physics.world.timeScale = 1 / s;      // Arcade is inverted: 2.5 = 40% speed
-        this.time.timeScale = s;
-        this.tweens.timeScale = s;
-        this.anims.globalTimeScale = s;
-        this.emitters.forEach((em) => { em.timeScale = s; });
-    }
-
-    /**
-     * Smoothly ease one dilation channel to `target` game speed over `duration`
-     * ms of *real* time. The driving tween lives in the same (slowed) tween
-     * manager, so its own timeScale is set to the inverse of the manager's on
-     * every update to keep the ease duration exact.
-     */
-    tweenSlow(channel, target, duration) {
-        this.cancelSlow(channel);
-        const proxy = { speed: this.slow[channel] };
-        const tw = this.tweens.add({
-            targets: proxy,
-            speed: target,
-            duration,
-            ease: 'Sine.easeInOut',
-            onUpdate: () => {
-                this.setSlow(channel, proxy.speed);
-                tw.timeScale = 1 / this.tweens.timeScale;
-            },
-            onComplete: () => {
-                this.setSlow(channel, target);
-                this.dilationTweens[channel] = null;
-            },
-        });
-        tw.timeScale = 1 / this.tweens.timeScale;
-        this.dilationTweens[channel] = tw;
-    }
-
-    cancelSlow(channel) {
-        const tw = this.dilationTweens[channel];
-        if (tw) { tw.stop(); this.dilationTweens[channel] = null; }
-    }
-
-    /** Hard reset of all dilation (checkpoints, game over, finish). */
-    resetSlow() {
-        this.cancelSlow('tutorial');
-        this.cancelSlow('fragment');
-        this.setSlow('fragment', 1);
-        this.setSlow('tutorial', 1);
-    }
-
-    /**
-     * Advance Arcade physics by exactly one step per rendered frame.
-     * `world.timeScale` (tweened via setSlow) is Arcade's inverted scale, so the
-     * game-time delta is real delta / timeScale. Stepping every frame avoids the
-     * judder of fixed-step mode, which would only step every Nth frame.
-     */
-    stepPhysics(time, dtReal) {
-        const world = this.physics.world;
-        world.update(time, dtReal / world.timeScale);
-    }
-
     after(ms, fn) { this.realTimers.push({ at: this.realTime + ms, fn }); }
 
-    // -------------------------------------------------------------- input
-    grounded() { return this.rover.body.blocked.down || this.rover.body.touching.down; }
+    // ------------------------------------------------------------ input helpers
+    grounded() { return this.rover.body.blocked.down; }
 
-    // coyote time: still counts as grounded for 90 ms (real) after leaving the floor
     canJump() {
-        return (this.grounded() || this.realTime - this.lastGroundedAt < 90) && this.rover.body.velocity.y >= 0;
-    }
-
-    onJumpPressed() {
-        if (this.state !== 'run') return;
-        this.spaceHoldMs = 0;
-        if (this.canJump() && !this.sliding) {
-            this.lastGroundedAt = -1e9;
-            this.rover.body.setVelocityY(JUMP_TAP_VY);   // baseline short hop
-            this.jumpHolding = true;                      // lift continues while held
-            this.jumpHoldMs = 0;
-            this.energy = Math.max(0, this.energy - 4);
-            this.thruster.explode(18);
-            this.tutorialInput('SPACE');
-        }
+        return (this.grounded() || this.realTime - this.lastGroundedAt < this.P.coyoteMs) && this.rover.body.velocity.y >= 0 && !this.ability.isSliding();
     }
 
     jumpKeyHeld() { return this.keys.space.isDown || this.keys.up.isDown || this.keys.w.isDown; }
 
     tutorialInput(key) {
         const t = this.activeTutorial;
-        if (!t) return;
-        const want = ContentDatabase.tutorials[t.id].key;
-        if (want.split('/').map((s) => s.trim()).includes(key)) UI.markTutorialDone();
+        if (!t || t.accepted) return;
+        if (t.accepts.includes(key)) {
+            t.accepted = true;
+            UI.markTutorialDone();
+            this.after(500, () => this.endTutorial(t));
+        }
     }
 
-    // ------------------------------------------------------------- update
+    // ------------------------------------------------------------ ability hooks
+    onBounce() {
+        this.airMode = 'bounce';
+        this.playClip('bounce', false);
+        const foot = this.roverFootY();
+        this.airbags.explode(10, this.rover.x, foot - 10);
+        this.airborneMs = 0;
+    }
+
+    onBoost() { this.thruster.explode(12); }
+
+    /** Spend energy for an ability; false (and nothing spent) if the battery is too low. */
+    spendEnergy(cost) {
+        if (!this.P.energy || this.energy < cost) return false;
+        this.energy -= cost;
+        this.pushHUD(false, false);
+        return true;
+    }
+
+    /** Refill from an energy source ('gust': wind-cleaned panels). */
+    gainEnergy(source) {
+        const E = this.P.energy;
+        const amt = source === 'gust' ? (E.gustCharge || 0) : 0;
+        if (!amt) return;
+        this.energy = Math.min(E.max, this.energy + amt);
+        this.floatText(this.rover.x, this.rover.y - 120, `+${amt} SOLAR CHARGE`, '#ffd23f');
+    }
+
+    lowPowerFeedback() {
+        const a = this.ability.hud();
+        this.lowPowerUntil = this.realTime + 1200;
+        this.floatText(this.rover.x, this.rover.y - 80, `LOW POWER: ${a.label} NEEDS ${this.L.ability.params.energyCost}%`, '#ff5a4e');
+        UI.flashEnergy();
+    }
+
+    // ------------------------------------------------------------ update
+    stepPhysics(time, dtReal) {
+        const world = this.physics.world;
+        world.update(time, dtReal / world.timeScale);
+    }
+
     update(time, delta) {
-        const dtReal = Math.min(delta, 50);   // clamp hitches (tab switch etc.)
+        if (!this.L) return;
+        const dtReal = Math.min(delta, 50);
         this.realTime += dtReal;
         this.stepPhysics(time, dtReal);
-        // fire real-time timers (unaffected by slow-mo)
         for (let i = this.realTimers.length - 1; i >= 0; i--) {
             if (this.realTime >= this.realTimers[i].at) { const t = this.realTimers.splice(i, 1)[0]; t.fn(); }
         }
-
-        if (this.state === 'menu') { this.rover.body.setVelocityX(0); return; }
+        if (this.state === 'intro') {
+            if (Phaser.Input.Keyboard.JustDown(this.keys.enter) || Phaser.Input.Keyboard.JustDown(this.keys.esc)) this.finishIntro();
+            return;
+        }
         if (this.state !== 'run') return;
+        // active-play clock: real time incl. slow motion; modal pauses / hidden tab never reach update
+        if (this.timing && delta < 250) this.playMs += delta;
 
-        // Game-time seconds for all custom movement/energy logic. Derived from the
-        // same world.timeScale used by stepPhysics, so both stay in lock-step.
-        const dt = dtReal / 1000 / this.physics.world.timeScale;
+        const dt = dtReal / 1000 / this.physics.world.timeScale;     // game seconds (same scale as physics)
+        const dtMs = dt * 1000;
         const r = this.rover, body = r.body;
         const onGround = this.grounded();
-        if (onGround) this.lastGroundedAt = this.realTime;
+        const JD = Phaser.Input.Keyboard.JustDown;
+        const jumpPressed = JD(this.keys.space) | JD(this.keys.up) | JD(this.keys.w);
+        const shiftPressed = JD(this.keys.shift) | JD(this.keys.down) | JD(this.keys.s);
+        const shiftDown = this.keys.shift.isDown || this.keys.down.isDown || this.keys.s.isDown;
 
-        // --- abilities ---------------------------------------------------
-        const shiftHeld = this.keys.shift.isDown || this.keys.down.isDown || this.keys.s.isDown;
+        // locomotion: genuine landing = descent onto ground after real air time
+        let landed = false;
+        if (onGround) {
+            if (this.airborneMs > 40 && body.velocity.y >= 0) landed = true;
+            this.airborneMs = 0;
+            this.lastGroundedAt = this.realTime;
+        } else this.airborneMs += dtMs;
+        if (landed) { this.ability.onLanded(); this.onLanded(); }
+
+        this.levelManager.update(dtMs);
+
+        // exclusive SHIFT ability (processed before jump: Sojourner SPACE+SHIFT -> bounce only)
+        const ab = this.ability.update({ dtMs, grounded: onGround, landed, shiftDown, shiftPressed: !!shiftPressed, jumpPressed: !!jumpPressed });
+        if (jumpPressed && !ab.suppressJump) this.tryJump();
+
+        // variable jump height (Spirit/Opportunity; Sojourner has jumpHoldMaxMs = 0)
         const jumpHeld = this.jumpKeyHeld();
-        this.spaceHoldMs = jumpHeld ? this.spaceHoldMs + dt * 1000 : 0;
-
-        // Variable jump height: while SPACE stays held (max 300 ms game time) and
-        // the rover is still rising, keep applying a smaller upward force.
+        this.spaceHoldMs = jumpHeld ? this.spaceHoldMs + dtMs : 0;
         if (this.jumpHolding) {
-            if (jumpHeld && body.velocity.y < 0 && this.jumpHoldMs < JUMP_HOLD_MAX_MS) {
-                const step = Math.min(dt * 1000, JUMP_HOLD_MAX_MS - this.jumpHoldMs);
+            if (jumpHeld && body.velocity.y < 0 && this.jumpHoldMs < this.P.jumpHoldMaxMs) {
+                const step = Math.min(dtMs, this.P.jumpHoldMaxMs - this.jumpHoldMs);
                 this.jumpHoldMs += step;
-                body.setVelocityY(body.velocity.y - JUMP_HOLD_ACCEL * (step / 1000));
-            } else {
-                this.jumpHolding = false;   // released, apex reached or 300 ms used
-            }
+                body.setVelocityY(body.velocity.y - this.P.jumpHoldAccel * step / 1000);
+            } else this.jumpHolding = false;
         }
 
-        // Boost: E, or keep holding SPACE well past the jump window.
-        const boostKey = this.keys.e.isDown || this.spaceHoldMs > BOOST_HOLD_MS;
-
-        // Slide while SHIFT is held (on the ground or as a fast-fall in the air).
-        // Starting a slide costs SLIDE_COST % battery and is refused below that.
-        // Holding SHIFT keeps the slide going without further cost. (Not gated
-        // on `onGround`: shrinking the body can drop ground contact for one
-        // step, which would otherwise make the slide flicker on/off.)
-        if (shiftHeld && !this.sliding) {
-            if (this.energy >= SLIDE_COST) {
-                this.energy -= SLIDE_COST;
-                this.setSliding(true);
-                this.slideBlocked = false;
-            } else if (!this.slideBlocked) {
-                this.slideBlocked = true;
-                this.floatText(r.x, r.y - 80, 'LOW POWER: SLIDE OFFLINE', '#ff5a4e');
-                UI.flashEnergy();
+        // Spirit-only legacy energy + boost (E / hold SPACE) — preserved baseline
+        const E = this.P.energy;
+        if (E) {
+            const LB = this.P.legacyBoost;           // Spirit only (E / hold SPACE)
+            if (LB) {
+                const want = this.keys.e.isDown || this.spaceHoldMs > LB.holdSpaceMs;
+                this.legacyBoosting = want && this.energy > 0;
+                if (this.legacyBoosting) { this.energy = Math.max(0, this.energy - LB.drainPerSec * dt); this.tutorialInput('E'); }
             }
-        } else if (!shiftHeld) {
-            if (this.sliding) this.setSliding(false);
-            this.slideBlocked = false;
+            // solar trickle charge (paused while Spirit slides so it can't refund the cost)
+            if (!this.ability.isSliding()) this.energy = Math.min(E.max, this.energy + E.regenPerSec * dt);
         }
-        if (shiftHeld) this.tutorialInput('SHIFT');
-        if (this.sliding && !onGround) body.setVelocityY(body.velocity.y + 1400 * dt);   // fast-fall
 
-        this.boosting = boostKey && this.energy > 0;
-        if (this.boosting) { this.energy = Math.max(0, this.energy - 24 * dt); this.tutorialInput('E'); }
-        // Solar trickle charge, paused while sliding so it can't refund the cost.
-        if (!this.sliding) this.energy = Math.min(100, this.energy + SOLAR_REGEN * dt);
-
-        // --- forward speed -----------------------------------------------
-        let speed = BASE_SPEED * (this.boosting ? BOOST_MULT : 1);
-        const inSand = onGround && this.sandZones.some((z) => r.x > z.x0 && r.x < z.x1);
-        if (inSand && !this.sliding && !this.boosting) speed *= SAND_MULT;
+        // forward speed
+        let speed = this.P.cruiseSpeed;
+        if (this.legacyBoosting) speed *= this.P.legacyBoost.speedMult;
+        if (ab.speed) speed = ab.speed;                                   // Opportunity burst (horizontal only)
+        const slow = onGround ? this.levelManager.slowAt(r.x) : 1;
+        const inSand = slow < 1;
+        if (inSand && !this.ability.isSliding() && !this.legacyBoosting) speed *= slow;
         body.setVelocityX(speed);
 
-        // --- particles ---------------------------------------------------
+        // particles
+        const boosting = this.legacyBoosting || !!ab.speed;
         this.dust.emitting = onGround;
-        this.dust.frequency = inSand ? 8 : this.sliding ? 10 : 22;
-        this.thruster.emitting = this.boosting;
+        this.dust.frequency = inSand ? 8 : this.ability.isSliding() ? 10 : 22;
+        this.thruster.emitting = this.legacyBoosting;
+        this.windTrail.emitting = !!ab.speed;
+        this.panelGlow.emitting = !!ab.speed;
 
-        // --- animation ---------------------------------------------------
-        let anim = 'rover-run';
-        if (this.realTime < this.damageAnimUntil) anim = 'rover-damage';
-        else if (!onGround) anim = 'rover-jump';
-        else if (this.sliding) anim = 'rover-slide';
-        if (r.anims.currentAnim?.key !== anim) r.play(anim);
-        r.anims.msPerFrame = anim === 'rover-run' ? 1000 / (12 * speed / BASE_SPEED) : r.anims.msPerFrame;
-
-        // invulnerability flicker (real time, stepped)
+        this.updateAnimation(onGround);
         const inv = this.realTime < this.invulnUntil;
-        r.setAlpha(inv ? (Math.floor(this.realTime / 90) % 2 ? 0.25 : 1) : 1);
+        if (this.L.rover.id === 'sojourner') r.setAlpha(inv ? 0.75 + 0.25 * Math.sin(this.realTime / 120) : 1);   // gentle, no strobing
+        else r.setAlpha(inv ? (Math.floor(this.realTime / 90) % 2 ? 0.25 : 1) : 1);
 
-        // --- level logic -------------------------------------------------
+        // level logic
+        const p = this.levelManager.progress(r.x);
         this.checkTutorials();
-        this.checkHazards();
+        this.checkHazards(dtMs);
         this.checkPickups();
-        this.checkGates();
+        this.checkGusts();
+        this.checkCheckpoints(p);
         if (this.state !== 'run') return;
-
-        // crater fall
-        if (r.body.bottom > GROUND_Y + 70) this.fellInCrater();
+        if (this.storm) this.updateStorm(p);
+        SaveStore.recordProgress(this.missionId, p);
+        if (r.x >= this.W.finishX) { this.finish(); return; }
+        if (this.roverFootY() > this.W.killY) this.fellInPit();
+        this.prevX = r.x;
 
         this.hudTimer -= dtReal;
-        if (this.hudTimer <= 0) { this.hudTimer = 80; this.pushHUD(inSand); }
+        if (this.hudTimer <= 0) { this.hudTimer = 80; this.pushHUD(inSand, boosting); }
+    }
+
+    tryJump() {
+        if (!this.canJump()) return;
+        this.lastGroundedAt = -1e9;
+        this.rover.body.setVelocityY(-this.P.jumpVelocity);
+        this.jumpHolding = this.P.jumpHoldMaxMs > 0;
+        this.jumpHoldMs = 0;
+        this.spaceHoldMs = 0;
+        if (this.P.energy) this.energy = Math.max(0, this.energy - this.P.energy.jumpCost);
+        this.airMode = 'jump';
+        this.thruster.explode(this.L.rover.id === 'sojourner' ? 6 : 18);
+        if (this.L.rover.id === 'sojourner') this.playClip('jump', false);
+        this.tutorialInput('SPACE');
+    }
+
+    onLanded() {
+        if (this.L.rover.id !== 'sojourner') return;
+        const clip = this.airMode === 'bounce' ? 'bounceLand' : 'jumpLand';
+        this.airMode = 'fall';
+        this.playClip(clip, false);
+        this.landAnimUntil = this.realTime + this.L.rover.clips[clip].frames.length * this.L.rover.clips[clip].frameDurationMs / this.time_.current;
+    }
+
+    updateAnimation(onGround) {
+        const id = this.L.rover.id;
+        if (this.realTime < this.damageAnimUntil) { this.playClip('damage'); return; }
+        if (id === 'sojourner') {
+            if (!onGround) { this.playClip(this.airMode === 'bounce' ? 'bounce' : 'jump'); return; }   // play once, hold last pose
+            if (this.realTime < this.landAnimUntil) return;                                         // authored landing frames
+            this.playClip('run');
+            return;
+        }
+        if (!onGround) this.playClip('jump');
+        else if (id === 'spirit' && this.ability.isSliding()) this.playClip('slide');
+        else this.playClip('run');
+        const a = this.rover.anims;
+        if (a.currentAnim && a.currentAnim.key.endsWith(':run')) {
+            const sp = Math.abs(this.rover.body.velocity.x) || this.P.cruiseSpeed;
+            a.msPerFrame = this.L.rover.clips.run.frameDurationMs * this.P.cruiseSpeed / sp;
+        }
     }
 
     updateCamera() {
-        if (this.state === 'run') this.cam.scrollX = Math.round(this.rover.x - CAMERA_LEAD);
-        this.updateParallax();
+        if (!this.rover) return;
+        if (this.state === 'run' || this.state === 'finished') this.cam.scrollX = Math.round(this.rover.x - 300);
+        this.levelManager.updateParallax(this.cam.scrollX);
     }
 
-    updateParallax() {
-        const sx = this.cam.scrollX;
-        for (const l of this.layers) l.tilePositionX = (sx * l.parallax) / 4;
-    }
-
-    setSliding(on) {
-        this.sliding = on;
-        const b = this.rover.body;
-        const h = on ? BODY.slideH : BODY.h;
-        b.setSize(BODY.w, h, false).setOffset(BODY.ox, BODY.bottom - h);
-    }
-
-    /**
-     * World y of the rover's wheel line, from the sprite (always current).
-     * Arcade only re-positions a resized body on its next step, so right after a
-     * slide starts body.y/bottom are stale for one frame.
-     */
-    roverBottom() {
-        const fh = AssetManifest.spritesheets.rover.frameHeight;
-        return this.rover.y - fh * this.rover.originY + BODY.bottom;
-    }
-
-    roverRect() {
-        const h = this.sliding ? BODY.slideH : BODY.h;
-        const left = this.rover.x - this.rover.width * this.rover.originX + BODY.ox;
-        return new Phaser.Geom.Rectangle(left, this.roverBottom() - h, BODY.w, h);
-    }
-
-    // ----------------------------------------------------------- tutorials
+    // ------------------------------------------------------------ tutorials
     checkTutorials() {
         const x = this.rover.x;
         for (const t of this.tutorials) {
-            if (t.state === 'pending' && x >= t.x) {
+            if (t.state === 'pending' && x >= t.triggerX) {
                 t.state = 'active';
                 this.activeTutorial = t;
-                UI.showTutorial(ContentDatabase.tutorials[t.id]);
-                this.tweenSlow('tutorial', DILATION.tutorial.speed, DILATION.tutorial.ms);
-            } else if (t.state === 'active' && x >= t.clearX) {
-                t.state = 'done';
-                this.activeTutorial = null;
-                UI.hideTutorial();
-                this.tweenSlow('tutorial', 1, DILATION.tutorial.ms);
-            }
+                UI.showTutorial(t, () => this.endTutorial(t));
+                this.time_.set('tutorial', 0.25, 400);
+            } else if (t.state === 'active' && x >= t.clearX) this.endTutorial(t);
         }
     }
 
-    // ------------------------------------------------------------- hazards
+    endTutorial(t) {
+        if (t.state !== 'active') return;
+        t.state = 'done';
+        if (this.activeTutorial === t) this.activeTutorial = null;
+        UI.hideTutorial();
+        this.time_.clear('tutorial', 400);
+    }
+
+    // ------------------------------------------------------------ hazards
     checkHazards() {
         const rr = this.roverRect();
-        for (const o of this.overhangs) {
-            if (Phaser.Geom.Rectangle.Overlaps(rr, o.rect)) this.damage('silica');
+        const hit = this.levelManager.damageAt(rr);
+        if (hit) {
+            if (hit.tick) {     // time-based damage with its own cooldown (no per-frame damage)
+                if (this.realTime - hit.tick.lastTick >= hit.tick.h.tickMs) { hit.tick.lastTick = this.realTime; this.damage(hit.type); }
+            } else this.damage(hit.type);
         }
-        for (const d of this.devils) {
-            const s = d.sprite;
-            // Damaging funnel band: above slide height, below jump apex.
-            d.rect.setTo(s.x - 48, GROUND_Y - 122, 96, 70);
-            if (Phaser.Geom.Rectangle.Overlaps(rr, d.rect)) this.damage('devil');
-        }
-        // embedded silica: slide across it to scrape it open
-        const st = this.embedded.find((e) => !e.done && Math.abs(e.x - this.rover.x) < 260);
-        this.silicaHint = !!st;
-        for (const e of this.embedded) {
+        const lm = this.levelManager;
+        this.silicaHint = false;
+        for (const e of lm.embedded) {
             if (e.done) continue;
-            if (this.sliding && Math.abs(e.x - this.rover.x) < 60) this.unearth(e);
+            if (Math.abs(e.h.x - this.rover.x) < e.h.hintRadius) this.silicaHint = true;
+            if (this.ability.isSliding() && Math.abs(e.h.x - this.rover.x) < e.h.radius) this.unearth(e);
         }
     }
 
     damage(source) {
-        if (this.realTime < this.invulnUntil) return;
+        if (this.state !== 'run' || this.realTime < this.invulnUntil) return;
         this.hp -= 1;
-        this.invulnUntil = this.realTime + INVULN_MS;
-        this.damageAnimUntil = this.realTime + 420;
-        this.sparks.explode(26, this.rover.x + 10, this.rover.y - 10);
-        this.after(140, () => this.sparks.explode(14, this.rover.x + 20, this.rover.y - 30));
-        this.cam.shake(220, 0.008);
-        if (source === 'devil') this.energy = Math.max(0, this.energy - 15);   // dust on the panels
-        this.pushHUD(false);
-        if (this.hp <= 0) this.gameOver();
+        this.invulnUntil = this.realTime + 1500;
+        this.damageAnimUntil = this.realTime + (this.L.rover.id === 'sojourner' ? this.L.rover.clips.damage.frames.length * this.L.rover.clips.damage.frameDurationMs : 420);
+        if (this.L.rover.id === 'sojourner') this.playClip('damage', false);
+        this.sparks.explode(this.L.rover.id === 'sojourner' ? 10 : 26, this.rover.x + 10, this.roverFootY() - 40);
+        this.smoke.explode(8, this.rover.x - 10, this.roverFootY() - 40);
+        this.after(140, () => this.sparks.explode(10, this.rover.x + 20, this.roverFootY() - 50));
+        this.cam.shake(220, this.L.rover.id === 'sojourner' ? 0.004 : 0.008);
+        if (source === 'devil' && this.P.energy && this.P.energy.devilDrain) this.energy = Math.max(0, this.energy - this.P.energy.devilDrain);
+        if (source === 'magneticDust' && this.P.energy && this.P.energy.dustDrain) this.energy = Math.max(0, this.energy - this.P.energy.dustDrain);   // magnetic dust drains power
+        this.pushHUD(false, false);
+        if (this.hp <= 0) this.die();
     }
 
-    fellInCrater() {
-        const r = this.rover;
-        const c = this.craters.find((k) => r.x > k.x0 - 80 && r.x < k.x1 + 80) || { x1: r.x };
+    fellInPit() {
+        const pit = this.levelManager.pitAt(this.rover.x);
         const hadInv = this.realTime < this.invulnUntil;
-        if (!hadInv) this.damage('crater');
-        else this.invulnUntil = this.realTime + INVULN_MS;
+        if (!hadInv) this.damage('pit'); else this.invulnUntil = this.realTime + 1500;
         if (this.state !== 'run') return;
-        r.setPosition(c.x1 + 70, GROUND_Y - 80);
-        r.body.setVelocity(0, 0);
+        const x = pit ? pit.x1 + 70 : this.rover.x + 120;
+        const top = this.levelManager.groundTopAt(x) ?? this.W.groundY;
+        this.rover.body.reset(x, this.yForFoot(top));
+        this.airborneMs = 0;
+        this.ability.onLanded();
     }
 
     unearth(e) {
         e.done = true;
-        this.shards.explode(30, e.x, GROUND_Y - 10);
+        this.shards.explode(30, e.h.x, this.W.groundY - 10);
         this.tweens.add({ targets: e.sprite, y: e.sprite.y + 26, duration: 300, ease: 'Stepped', easeParams: [3] });
-        const f = this.makeFragment(e.x, GROUND_Y - 10, e.fragment);
+        const def = this.hiddenFragments.find((f) => f.hiddenUntil === e.h.id);
+        if (!def || this.collected.has(def.id)) return;
+        const f = this.makeFragment(def, e.h.x, this.W.groundY - 10);
         this.fragments.push(f);
-        this.tweens.add({
-            targets: f.sprite, y: GROUND_Y - 120, duration: 350, ease: 'Back.out',
-            onComplete: () => this.collectFragment(f),
-        });
+        this.tweens.add({ targets: f.sprite, y: this.W.groundY - 120, duration: 350, ease: 'Back.out', onComplete: () => this.collectFragment(f) });
     }
 
-    // ------------------------------------------------------------- pickups
+    checkGusts() {
+        const rr = this.roverRect();
+        for (const g of this.levelManager.gusts) {
+            const inside = Phaser.Geom.Rectangle.Overlaps(rr, g.rect);
+            if (inside && !g.inside && this.ability.gust(g.h.id)) this.floatText(this.rover.x, this.rover.y - 90, 'WIND GUST: PANELS CLEANED', '#bff4ff');   // gust() also recharges energy
+            g.inside = inside;
+        }
+    }
+
+    // ------------------------------------------------------------ pickups
     checkPickups() {
-        // Pickups use the rover's full visible silhouette (mast included),
-        // so fragments/batteries are collectable while sliding or jumping.
         const body = this.roverRect();
-        const rr = new Phaser.Geom.Rectangle(body.x - 12, body.bottom - 118, body.width + 24, 128);
+        const R = this.L.rover;
+        const sweep = this.prevX === null ? 0 : Math.max(0, this.rover.x - this.prevX);     // swept: never skip at boost speed
+        const rr = new Phaser.Geom.Rectangle(body.x - 12 - sweep, body.bottom - R.pickupHeight, body.width + 24 + sweep, R.pickupHeight + 10);
         for (const f of this.fragments) {
-            if (!f.taken && !this.collected.has(f.n) && rr.contains(f.sprite.x, f.sprite.y)) this.collectFragment(f);
-            else if (!f.taken && this.collected.has(f.n)) { f.taken = true; f.sprite.destroy(); }
+            if (f.taken) continue;
+            if (this.collected.has(f.def.id)) { f.taken = true; f.sprite.destroy(); continue; }
+            if (rr.contains(f.sprite.x, f.sprite.y)) this.collectFragment(f);
         }
         for (const b of this.batteries) {
             if (!b.taken && rr.contains(b.sprite.x, b.sprite.y)) {
                 b.taken = true;
-                this.energy = Math.min(100, this.energy + 40);
+                this.energy = Math.min(this.P.energy.max, this.energy + this.P.energy.batteryCharge);
                 this.dataBurst.explode(16, b.sprite.x, b.sprite.y);
-                this.floatText(b.sprite.x, b.sprite.y - 20, '+40 SOLAR CHARGE', '#ffd23f');
+                this.floatText(b.sprite.x, b.sprite.y - 20, `+${this.P.energy.batteryCharge} SOLAR CHARGE`, '#ffd23f');
                 b.sprite.destroy();
             }
         }
     }
 
     collectFragment(f) {
-        if (f.taken) return;
+        if (f.taken || this.collected.has(f.def.id)) return;
         f.taken = true;
-        this.collected.add(f.n);
+        this.collected.add(f.def.id);
         this.dataBurst.explode(30, f.sprite.x, f.sprite.y);
         f.sprite.destroy();
-        this.fragmentQueue.push(f.n);
+        this.fragmentQueue.push(f.def);
         this.showNextFragment();
     }
 
     showNextFragment() {
         if (this.fragmentShowing || !this.fragmentQueue.length) return;
-        const n = this.fragmentQueue.shift();
+        const def = this.fragmentQueue.shift();
         this.fragmentShowing = true;
-        UI.showFragment(n, TOTAL_FRAGMENTS);
-        this.tweenSlow('fragment', DILATION.fragment.speed, DILATION.fragment.ms);
-        this.after(2000, () => {          // 2 s of *real* time
+        UI.showFragment(def, 10);
+        this.time_.set('fragment', 0.85, 200);
+        this.after(2000, () => {
             UI.hideFragment();
-            this.tweenSlow('fragment', 1, DILATION.fragment.ms);
+            this.time_.clear('fragment', 200);
             this.fragmentShowing = false;
             this.showNextFragment();
         });
     }
 
     floatText(x, y, msg, color) {
-        const t = this.add.text(x, y, msg, { fontFamily: 'VT323', fontSize: '28px', color, stroke: '#000', strokeThickness: 4 })
-            .setOrigin(0.5).setDepth(20);
+        const t = this.add.text(x, y, msg, { fontFamily: 'VT323', fontSize: '28px', color, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(20);
         this.tweens.add({ targets: t, y: y - 50, alpha: 0, duration: 900, ease: 'Stepped', easeParams: [8], onComplete: () => t.destroy() });
     }
 
-    // --------------------------------------------------------------- gates
-    checkGates() {
-        const x = this.rover.x;
+    // ------------------------------------------------------------ checkpoints / finish / death
+    checkCheckpoints(p) {
         for (const cp of this.checkpoints) {
-            if (!cp.done && x >= cp.x) {
-                cp.done = true;
-                this.respawn = { x: cp.x + 60 };
-                // clear any slow-mo before pausing for the terminal
-                UI.hideFragment(); this.fragmentQueue = []; this.fragmentShowing = false;
-                this.resetSlow();
-                this.pushHUD(false);
-                this.pauseFor((resume) => UI.showCheckpoint(cp.n, resume));
-                return;
-            }
+            if (cp.done || this.rover.x < cp.x) continue;        // threshold crossing, once per id
+            cp.done = true;
+            this.respawnX = cp.x + 60;
+            this.pushHUD(false, false);
+            this.pauseFor((resume) => UI.showCheckpoint(cp, () => { this.confirmedLogs.add(cp.id); resume(); }));
+            return;
         }
-        if (!this.finalGate.done && x >= this.finalGate.x) {
-            this.finalGate.done = true;
-            this.finish();
-        }
+        void p;
     }
 
     finish() {
+        if (this.state !== 'run') return;
         this.state = 'finished';
+        this.timing = false;
+        let fastest = null;
+        if (!this.finishRecorded) { this.finishRecorded = true; fastest = SaveStore.recordFinish(this.missionId, this.playMs); }
+        this.ability.cancel();
+        this.time_.reset();
         this.rover.body.setVelocity(0, 0);
-        this.rover.play('rover-idle');
-        this.dust.emitting = false;
-        this.thruster.emitting = false;
+        this.rover.body.enable = false;
+        this.playClip('idle');
+        [this.dust, this.thruster, this.windTrail, this.panelGlow].forEach((e) => { e.emitting = false; });
         UI.hideFragment(); UI.hideTutorial();
-        this.resetSlow();
-        this.pushHUD(false);
-        UI.showQuiz({
-            onDecrypted: () => {   // the Codex unlocks once the final story is decrypted
-                try { localStorage.setItem('roverRush.codex.MER-A', '1'); } catch (e) { /* storage blocked */ }
-            },
-            onComplete: () => this.scene.restart({}),
+        this.pushHUD(false, false);
+        const toQuiz = () => UI.showQuiz(this.L, {
+            clearMs: Math.round(this.playMs), fastestMs: fastest,
+            onDecrypted: () => SaveStore.unlockCodex(this.missionId),
+            onComplete: () => this.exitToMenu(),
         });
+        if (this.storm) {   // safe finish reached: storm may now fully black out
+            this.tweens.add({ targets: this.storm, blackout: 1, duration: 1600, onUpdate: () => this.storm.fog.setAlpha(this.storm.blackout), onComplete: toQuiz });
+        } else this.after(600, toQuiz);
     }
 
-    gameOver() {
+    die() {
         this.state = 'over';
+        this.timing = false;
+        this.ability.cancel();
+        this.time_.reset();
         this.rover.body.setVelocity(0, 0);
-        this.dust.emitting = false;
-        this.thruster.emitting = false;
-        this.resetSlow();
+        [this.dust, this.thruster, this.windTrail, this.panelGlow].forEach((e) => { e.emitting = false; });
         UI.hideTutorial(); UI.hideFragment();
-        this.after(700, () => UI.showGameOver({
-            onRetry: () => this.respawnAtCheckpoint(),
-            onMenu: () => this.scene.restart({}),
-        }));
+        this.fragmentQueue = []; this.fragmentShowing = false;
+        window.setTimeout(() => UI.showGameOver({ onRetry: () => this.respawnAtCheckpoint(), onMenu: () => this.exitToMenu() }), 700);
     }
 
     respawnAtCheckpoint() {
-        this.hp = MAX_HP;
-        this.energy = 100;
-        this.invulnUntil = this.realTime + INVULN_MS;
-        this.fragmentQueue = []; this.fragmentShowing = false;
-        // tutorials already seen don't replay
-        this.tutorials.forEach((t) => { if (t.x < this.respawn.x || t.state === 'active') t.state = 'done'; });
+        this.hp = this.maxHp;
+        if (this.P.energy) this.energy = this.P.energy.max;
+        this.invulnUntil = this.realTime + 1500;
+        this.ability.cancel();
+        this.setBodyHeight(null);
+        this.tutorials.forEach((t) => { if (t.triggerX < this.respawnX || t.state === 'active') t.state = 'done'; });
         this.activeTutorial = null;
-        this.rover.setPosition(this.respawn.x, GROUND_Y - 80);
-        this.rover.body.setVelocity(0, 0);
-        this.setSliding(false);
-        this.jumpHolding = false;
+        const top = this.levelManager.groundTopAt(this.respawnX) ?? this.W.groundY;
+        this.rover.body.reset(this.respawnX, this.yForFoot(top));
+        this.airborneMs = 0;
+        this.prevX = null;
         this.state = 'run';
-        this.pushHUD(false);
+        this.timing = true;                     // same attempt: keeps accrued time
+        this.input.keyboard.resetKeys();
+        this.pushHUD(false, false);
     }
 
-    pushHUD(inSand) {
+    exitToMenu() {
+        UI.showHUD(false);
+        this.scene.stop();
+        window.RoverRush.openMenu();
+    }
+
+    pushHUD(inSand, boosting) {
         let status = '';
-        if (this.slideBlocked) status = `LOW POWER: SLIDE NEEDS ${SLIDE_COST}%`;
+        const a = this.ability.hud();
+        if (this.ability.blocked || this.realTime < (this.lowPowerUntil || 0)) status = `LOW POWER: ${a.label} NEEDS ${this.L.ability.params.energyCost}%`;
         else if (this.silicaHint) status = 'SILICA DETECTED: SLIDE [SHIFT] TO SCRAPE';
-        else if (inSand && !this.sliding && !this.boosting) status = 'SOFT SAND: TRACTION -70%';
-        else if (this.boosting) status = 'BOOST';
+        else if (inSand && !this.ability.isSliding() && !this.legacyBoosting) status = 'SOFT SAND: TRACTION -70%';
+        else if (this.stormQ > 0) status = 'DUST STORM: SUNLIGHT FADING';
+        else if (boosting) status = 'BOOST';
         UI.updateHUD({
-            hp: this.hp, maxHp: MAX_HP, energy: this.energy,
-            progress: Math.max(0, this.rover.x) / LEVEL_LENGTH,
-            fragments: this.collected.size, totalFragments: TOTAL_FRAGMENTS, status,
+            hp: this.hp, maxHp: this.maxHp, energy: this.energy,
+            progress: this.levelManager.progress(this.rover.x),
+            fragments: this.collected.size, totalFragments: 10, status, ability: a,
+            timeMs: this.playMs,
         });
     }
 }

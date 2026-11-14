@@ -20,33 +20,47 @@
         <div id="hud" class="hidden">
             <div class="hud-left">
                 <div id="hud-hearts" class="hearts" aria-label="Health"></div>
-                <div class="energy" aria-label="Energy">
+                <div id="hud-energy" class="energy" aria-label="Energy">
                     <img class="energy-empty" src="assets/ui/energy_empty.png" alt="">
                     <img id="energy-full" class="energy-full" src="assets/ui/energy_full.png" alt="">
                     <span id="energy-label" class="energy-label">100%</span>
+                </div>
+                <div id="hud-ability" class="ability" data-state="ready" aria-label="Rover ability">
+                    <span id="hud-ability-label" class="ability-label"></span>
+                    <span id="hud-ability-state" class="ability-state">READY</span>
+                    <div class="ability-bar"><div id="hud-ability-fill" class="ability-fill"></div></div>
                 </div>
             </div>
             <div class="hud-center">
                 <div class="progress">
                     <div id="progress-fill" class="progress-fill"></div>
-                    <div class="progress-tick" style="left:25%"></div>
-                    <div class="progress-tick" style="left:50%"></div>
-                    <div class="progress-tick" style="left:75%"></div>
+                    <div id="progress-ticks"></div>
                     <div id="progress-rover" class="progress-rover"></div>
                 </div>
-                <div id="progress-label" class="progress-label">0%</div>
+                <div class="progress-label"><span id="progress-label">0%</span> <span id="progress-scale" class="progress-scale"></span></div>
             </div>
             <div class="hud-right">
                 <div id="hud-fragments" class="frag-count">DATA 0/10</div>
+                <div id="hud-time" class="hud-time">0:00.000</div>
                 <div id="hud-status" class="status"></div>
             </div>
         </div>
 
+        <!-- Sojourner landing reenactment (skippable) -->
+        <div id="intro" class="intro hidden" role="status">
+            <span id="intro-label" class="intro-label"></span>
+            <button id="intro-skip" class="btn small">SKIP</button>
+        </div>
+
         <!-- Slow-mo tutorial prompt -->
         <div id="tutorial" class="tutorial hidden" role="status">
-            <div class="tutorial-tag">// TRAINING SIM - TIME DILATION 50%</div>
+            <div id="tutorial-tag" class="tutorial-tag"></div>
             <div id="tutorial-text" class="tutorial-text"></div>
-            <div id="tutorial-key" class="key-cap"></div>
+            <div id="tutorial-note" class="tutorial-note hidden"></div>
+            <div class="tutorial-row">
+                <div id="tutorial-key" class="key-cap"></div>
+                <button id="tutorial-continue" class="btn small">CONTINUE</button>
+            </div>
         </div>
 
         <!-- Memory fragment pop-up -->
@@ -68,6 +82,13 @@
 <!-- Game modules (classic scripts, ordered by dependency) -->
 <script src="js/ContentDatabase.js"></script>
 <script src="js/AssetManifest.js"></script>
+<script src="js/data/GameData.js"></script>
+<script src="js/core/LevelSchema.js"></script>
+<script src="js/core/SaveStore.js"></script>
+<script src="js/core/PixelTextures.js"></script>
+<script src="js/core/TimeCoordinator.js"></script>
+<script src="js/core/Abilities.js"></script>
+<script src="js/core/LevelManager.js"></script>
 <script src="js/UIController.js"></script>
 <script src="js/scenes/BootScene.js"></script>
 <script src="js/scenes/GameScene.js"></script>

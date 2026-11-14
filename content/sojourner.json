@@ -1,0 +1,195 @@
+{
+  "id": "sojourner",
+  "sourceScript": "rover_rush_sojourner_script.md",
+  "scriptVersion": "1",
+  "tutorials": [
+    {
+      "id": "soj-t1",
+      "slot": 1,
+      "keyCaption": "SPACE",
+      "accepts": [
+        "SPACE"
+      ],
+      "text": "Press [SPACE] for a short hop over small Martian pebbles."
+    },
+    {
+      "id": "soj-t2",
+      "slot": 2,
+      "keyCaption": "SHIFT",
+      "accepts": [
+        "SHIFT"
+      ],
+      "text": "Tall obstacle ahead! Press [SHIFT] to deploy Airbags and bounce high!",
+      "note": "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump."
+    },
+    {
+      "id": "soj-t3",
+      "slot": 3,
+      "keyCaption": "SHIFT",
+      "accepts": [
+        "SHIFT"
+      ],
+      "text": "Warning: Magnetic dust drains power! Bounce high to evade."
+    },
+    {
+      "id": "soj-t4",
+      "slot": 4,
+      "keyCaption": "SPACE + SHIFT",
+      "accepts": [
+        "SHIFT"
+      ],
+      "text": "Wide flood plain gap! Combine [SPACE] and [SHIFT] to clear it."
+    }
+  ],
+  "fragments": [
+    {
+      "id": "soj-f01",
+      "n": 1,
+      "displayText": "Launched Dec. 4, 1996. Landed safely on July 4, 1997!"
+    },
+    {
+      "id": "soj-f02",
+      "n": 2,
+      "displayText": "Cushioned by airbags, bouncing 15 times up to 50 feet high!"
+    },
+    {
+      "id": "soj-f03",
+      "n": 3,
+      "displayText": "Pathfinder bounced and rolled about 1 kilometer from first impact."
+    },
+    {
+      "id": "soj-f04",
+      "n": 4,
+      "displayText": "The lander was named the Carl Sagan Memorial Station, in Ares Vallis."
+    },
+    {
+      "id": "soj-f05",
+      "n": 5,
+      "displayText": "Rolled down a 20-degree ramp onto the rocky flood plain."
+    },
+    {
+      "id": "soj-f06",
+      "n": 6,
+      "displayText": "Only 1 foot tall and weighing just 23 pounds!"
+    },
+    {
+      "id": "soj-f07",
+      "n": 7,
+      "displayText": "Found rounded pebbles, suggesting flowing water existed in Mars' past."
+    },
+    {
+      "id": "soj-f08",
+      "n": 8,
+      "displayText": "The Pathfinder mission found that airborne Martian dust is magnetic!"
+    },
+    {
+      "id": "soj-f09",
+      "n": 9,
+      "displayText": "The Pathfinder mission observed early-morning water ice clouds in the sky."
+    },
+    {
+      "id": "soj-f10",
+      "n": 10,
+      "displayText": "Pathfinder mission sent 2.3 billion bits before final contact Sept. 27, 1997."
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "soj-cp1",
+      "slot": 1,
+      "p": 0.25,
+      "title": "CHECKPOINT 1 // THE ARRIVAL",
+      "log": "SYSTEM LOG 01: I am Sojourner, the first rover to ever rove another planet! My Pathfinder lander cushioned our arrival with giant airbags—we bounced 15 times, up to 50 feet high, and rolled 1 kilometer to rest at the Carl Sagan Memorial Station in Ares Vallis."
+    },
+    {
+      "id": "soj-cp2",
+      "slot": 2,
+      "p": 0.5,
+      "title": "CHECKPOINT 2 // THE PIONEER",
+      "log": "SYSTEM LOG 02: Standing just 1 foot tall and weighing 23 pounds, I deployed down a 20-degree ramp into this ancient flood plain. Navigating these massive boulders takes serious verticality, so my Airbag Bounce system is keeping me moving forward!"
+    },
+    {
+      "id": "soj-cp3",
+      "slot": 3,
+      "p": 0.75,
+      "title": "CHECKPOINT 3 // THE GREAT DISCOVERY",
+      "log": "SYSTEM LOG 03: My sensors are rewriting planetary science! I've spotted rounded pebbles that suggest water once flowed across a warmer Mars. Plus, our Pathfinder mission discovered the airborne dust is magnetic and spotted early-morning water ice clouds!"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "soj-q1",
+      "question": "How did the Mars Pathfinder lander cushion its arrival on Mars?",
+      "options": [
+        {
+          "id": "soj-q1-a",
+          "text": "Retro-rockets and skycrane"
+        },
+        {
+          "id": "soj-q1-b",
+          "text": "Airbags that bounced 15 times"
+        },
+        {
+          "id": "soj-q1-c",
+          "text": "A giant parachute only"
+        }
+      ],
+      "correct": "soj-q1-b",
+      "explanation": "Check SYSTEM LOG 01: Pathfinder's giant airbags let the lander bounce about 15 times before coming to rest.",
+      "taughtBy": "soj-cp1",
+      "taughtPhrase": "15 times"
+    },
+    {
+      "id": "soj-q2",
+      "question": "What did Sojourner's discovery of rounded pebbles in Ares Vallis suggest?",
+      "options": [
+        {
+          "id": "soj-q2-a",
+          "text": "Flowing water existed in a warmer Martian past"
+        },
+        {
+          "id": "soj-q2-b",
+          "text": "Active volcanoes were nearby"
+        },
+        {
+          "id": "soj-q2-c",
+          "text": "The ground was made of pure ice"
+        }
+      ],
+      "correct": "soj-q2-a",
+      "explanation": "Check SYSTEM LOG 03: rounded pebbles suggest water once flowed across a warmer Mars.",
+      "taughtBy": "soj-cp3",
+      "taughtPhrase": "warmer"
+    }
+  ],
+  "codex": {
+    "file": "Archive File: Mars Pathfinder & Sojourner (The Pioneers)",
+    "sections": [
+      {
+        "id": "soj-cx-profile",
+        "heading": "Mission Profile",
+        "body": "Launched on December 4, 1996, Mars Pathfinder and its rover, Sojourner, landed on July 4, 1997, in Ares Vallis—a rocky, ancient flood plain in Mars' northern hemisphere. The lander was named the Carl Sagan Memorial Station."
+      },
+      {
+        "id": "soj-cx-landing",
+        "heading": "The Landing & Hardware",
+        "body": "Pathfinder pioneered an innovative airbag landing system that bounced about 15 times—reaching up to 50 feet high—and rolled roughly 1 kilometer from its initial impact point before coming to a stop. Sojourner, standing just 1 foot tall and weighing 23 pounds, deployed down a 20-degree ramp to explore the surface."
+      },
+      {
+        "id": "soj-cx-discoveries",
+        "heading": "Major Discoveries",
+        "body": "The mission's observations of rounded pebbles suggested that flowing liquid water existed during a warmer period in Mars' past. The mission also discovered that airborne Martian dust has magnetic properties and observed early-morning clouds composed of water ice."
+      },
+      {
+        "id": "soj-cx-legacy",
+        "heading": "Mission Legacy",
+        "body": "Before its final transmission on September 27, 1997, the Pathfinder mission returned 2.3 billion bits of information, proving that low-cost mobile exploration on the Red Planet was possible."
+      }
+    ],
+    "notes": [
+      "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump.",
+      "The 2.3 billion bits and the roughly 1 kilometer of bounce-and-roll travel belong to the whole Pathfinder mission (lander and rover); Sojourner itself drove about 100 meters.",
+      "Magnetic-dust power drain, hopping and the airbag bounce are arcade abstractions, not literal rover capabilities."
+    ]
+  }
+}
