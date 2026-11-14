@@ -10,7 +10,7 @@ Working handoff for the three-mission upgrade (Sojourner, Spirit V2, Opportunity
 
 | Field | Value |
 | --- | --- |
-| Last updated | 2026-11-14, M2 done (content), starting M3 (shared runtime) |
+| Last updated | 2026-11-14, M3 in progress: core modules + GameScene written; wiring (Boot/UI/index/main) not done, **game not runnable at this commit** |
 | PRD | Not in the checkout. It was attached to the session as `Rover_Rush_-_Final_Claude_Code_Master_Upgrade_Prompt.md`. **Re-attach it when resuming.** |
 | Branch | `claude/clever-galileo-t5dz1n` (pushed to origin; `main` receives merges on request) |
 | Starting commit | `b15ac95` (merge of `origin/main`: new scripts and Sojourner art) |
@@ -99,20 +99,47 @@ Supporting test tooling (not in repo): Playwright + Chromium are preinstalled in
 - Checker: `node tools/check_content.mjs` covers verbatim-or-ledgered wording, counts, the 12-word limit, unique IDs, quiz correct-option IDs, `taughtBy` logs, official sources, facts absent from fragments, and V1 text in shipped files. It extracts the V1 strings from `git show cdd546b^:game_content_script_spirit_level.md`.
 - NASA reference pages for the PRD URLs were fetched to `<scratchpad>/md_ref/*.md`; key facts are summarised in the ledger reasons.
 
+## M3 status (in progress)
+
+Done (committed as WIP):
+- `js/core/LevelSchema.js`: validator (Node + browser).
+- `js/core/TimeCoordinator.js`: reasons tutorial > fragment; freeze = scene.pause.
+- `js/core/SaveStore.js`: v2 save, legacy migration, personal bests.
+- `js/core/Abilities.js`: registry. trenchScrapeSlide / airbagBounce / solarWindBoost.
+- `js/core/PixelTextures.js`: procedural textures.
+- `js/core/LevelManager.js`: world build and queries.
+- `js/scenes/GameScene.js`: data-driven rewrite.
+- `tools/levels/{common,sim,spirit,sojourner,opportunity}.mjs` and `tools/build_levels.mjs`: all three levels pass schema + simulation checks. They write `assets/data/levels/*.json` and `js/data/GameData.js`.
+
+Tuning decisions:
+- Sojourner hop 0.55 J = 185 px/s (the PRD default 0.45 J gives a 14 px apex that cannot clear pebbles with margin).
+- Sojourner bounce 454.
+- Sojourner channels are 340 px. A ground bounce reaches at best 328 px; SPACE then SHIFT works for a SHIFT at 235–450 ms.
+- Walking off the edge and then bouncing mid-air is also a valid airborne route.
+- Opportunity: boost 750 px/s for 7000 ms, recharge 3000 ms. These come from Spirit's legacy boost (450 px/s, 4651 ms from a full battery) × 1.5. Course is 48000 (1.6×).
+
 ## Next action
 
-M3: Create the shared runtime.
-- `js/core/LevelSchema.js`: validator, usable in Node and the browser.
-- `tools/build_levels.mjs`: content + layout → `assets/data/levels/*.json`, validating as it goes.
-- `js/core/TimeCoordinator.js`: reasons and precedence.
-- `js/core/SaveStore.js`: v2 save, migrating `roverRush.codex.MER-A`.
-- `js/core/Abilities.js`: registry.
-- `js/core/PixelTextures.js`: procedural pixel textures.
+Wire the runtime. Each step below is still to do:
+1. `index.html`: add script tags for `js/data/GameData.js` and `js/core/*.js` before the scenes.
+2. `js/scenes/BootScene.js`: load the `sojourner` spritesheet, `level:<id>` JSON for all three missions, and loader progress → `UI.setLoadProgress`. Use the anim keys `fragment-spin` and `devil-spin`.
+3. `js/main.js`: `window.RoverRush = { openMenu, startMission(id) }`. Show the menu immediately; start the Phaser game, run BootScene, then enable the cards.
+4. `js/UIController.js`: add the methods GameScene calls:
+   - `showMenu` cards: progress / fastest / codex / fact with source, plus retry.
+   - `showIntro(label, onSkip)`, `hideIntro`, `configureHUD`.
+   - `updateHUD` with an ability pill and timer.
+   - `showTutorial(t, onContinue)` with note + Continue button.
+   - `showFragment(def, total)`, `showCheckpoint(cp, onConfirm)`.
+   - `showQuiz(level, {clearMs, fastestMs, onDecrypted, onComplete})` with explanations + retry.
+   - `showCodex(levelOrId)`, `showGameOver`, `showFatal`, `flashEnergy`.
+5. `js/ContentDatabase.js`: strip all V1 mission text and keep only UI chrome.
+6. `vercel.json`: the build already copies `assets` (levels) and `js` (core/data); nothing more needed.
 
-Then refactor `GameScene` to read the level JSON. Check: build_levels and the validators pass, and the Spirit bot run matches the baseline.
+Then run `node tools/check_content.mjs` (V1 check must pass) and the browser bots for each mission (scratchpad `bot.js` needs a `missionId` start).
 
 ## Commands run / results
 
 - `git merge origin/main` → b15ac95 (brought in scripts + Sojourner art). OK.
+- `node tools/build_levels.mjs` → ✓ all 3 levels (schema + sims), Opportunity 1.60× longest.
 - `node tools/check_content.mjs` → 862 assertions; only the 15 expected V1 failures (`js/ContentDatabase.js`).
 - `python3 tools/build_sojourner.py` → 79 frames 196×163, scale 0.691, footY 121. Visually checked contact sheets (all clips aligned on the foot line).

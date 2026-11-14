@@ -1,0 +1,591 @@
+{
+ "schemaVersion": 1,
+ "id": "spirit",
+ "order": 2,
+ "title": "Spirit",
+ "subtitle": "Gusev Crater, 2004",
+ "missionDates": {
+  "landing": "Jan. 3, 2004",
+  "timeConvention": "PST (Jan. 4 UTC)"
+ },
+ "sourceScript": {
+  "file": "rover_rush_spirit_script.md",
+  "version": "V2"
+ },
+ "sources": [
+  "https://science.nasa.gov/mission/mer-spirit/",
+  "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
+ ],
+ "rover": {
+  "id": "spirit",
+  "texture": "rover",
+  "frameWidth": 176,
+  "frameHeight": 136,
+  "origin": {
+   "x": 0.5,
+   "y": 0.5
+  },
+  "displayScale": 1,
+  "body": {
+   "w": 100,
+   "h": 84,
+   "offsetX": 38,
+   "footY": 134
+  },
+  "pickupHeight": 118,
+  "clips": {
+   "idle": {
+    "frames": [
+     0,
+     1
+    ],
+    "frameDurationMs": 500,
+    "repeat": -1
+   },
+   "run": {
+    "frames": [
+     2,
+     3,
+     4,
+     5
+    ],
+    "frameDurationMs": 83.33,
+    "repeat": -1
+   },
+   "jump": {
+    "frames": [
+     6
+    ],
+    "frameDurationMs": 100,
+    "repeat": 0
+   },
+   "damage": {
+    "frames": [
+     8,
+     9
+    ],
+    "frameDurationMs": 71.43,
+    "repeat": -1
+   },
+   "slide": {
+    "frames": [
+     7
+    ],
+    "frameDurationMs": 100,
+    "repeat": 0
+   }
+  },
+  "slideBody": {
+   "h": 42
+  }
+ },
+ "physics": {
+  "units": "px, px/s, px/s^2, ms",
+  "coyoteMs": 90,
+  "jumpHoldAccel": 1400,
+  "jumpHoldMaxMs": 300,
+  "cruiseSpeed": 300,
+  "gravity": 800,
+  "jumpVelocity": 336,
+  "energy": {
+   "max": 100,
+   "regenPerSec": 2.5,
+   "jumpCost": 4,
+   "devilDrain": 15,
+   "batteryCharge": 40
+  },
+  "legacyBoost": {
+   "keys": "E or hold SPACE",
+   "speedMult": 1.5,
+   "drainPerSec": 24,
+   "holdSpaceMs": 500
+  }
+ },
+ "ability": {
+  "id": "trenchScrapeSlide",
+  "params": {
+   "energyCost": 15,
+   "slideBodyH": 42,
+   "fastFall": 1400
+  }
+ },
+ "world": {
+  "length": 30000,
+  "groundY": 620,
+  "startX": 0,
+  "finishX": 30000,
+  "spawnX": 140,
+  "seed": 2004,
+  "killY": 690
+ },
+ "terrain": {
+  "ground": [
+   {
+    "x0": -1200,
+    "x1": 1200,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 1370,
+    "x1": 3000,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 3180,
+    "x1": 6600,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 6790,
+    "x1": 9900,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 10100,
+    "x1": 14100,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 14290,
+    "x1": 21000,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 21210,
+    "x1": 23400,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 23600,
+    "x1": 27900,
+    "top": 620,
+    "role": "solid"
+   },
+   {
+    "x0": 28120,
+    "x1": 32600,
+    "top": 620,
+    "role": "solid"
+   }
+  ],
+  "platforms": []
+ },
+ "safeZones": [],
+ "hazards": [
+  {
+   "id": "spi-overhang-1",
+   "type": "overhang",
+   "role": "damage",
+   "x": 4200,
+   "w": 176,
+   "tipY": 562
+  },
+  {
+   "id": "spi-overhang-2",
+   "type": "overhang",
+   "role": "damage",
+   "x": 5700,
+   "w": 176,
+   "tipY": 562
+  },
+  {
+   "id": "spi-overhang-3",
+   "type": "overhang",
+   "role": "damage",
+   "x": 13200,
+   "w": 176,
+   "tipY": 562
+  },
+  {
+   "id": "spi-overhang-4",
+   "type": "overhang",
+   "role": "damage",
+   "x": 19950,
+   "w": 176,
+   "tipY": 562
+  },
+  {
+   "id": "spi-overhang-5",
+   "type": "overhang",
+   "role": "damage",
+   "x": 27000,
+   "w": 176,
+   "tipY": 562
+  },
+  {
+   "id": "spi-devil-1",
+   "type": "dustDevil",
+   "role": "damage",
+   "x": 9000,
+   "range": 90,
+   "w": 96,
+   "y0": 498,
+   "y1": 568,
+   "periodMs": 1500
+  },
+  {
+   "id": "spi-devil-2",
+   "type": "dustDevil",
+   "role": "damage",
+   "x": 11100,
+   "range": 110,
+   "w": 96,
+   "y0": 498,
+   "y1": 568,
+   "periodMs": 1500
+  },
+  {
+   "id": "spi-devil-3",
+   "type": "dustDevil",
+   "role": "damage",
+   "x": 19500,
+   "range": 120,
+   "w": 96,
+   "y0": 498,
+   "y1": 568,
+   "periodMs": 1500
+  },
+  {
+   "id": "spi-devil-4",
+   "type": "dustDevil",
+   "role": "damage",
+   "x": 24960,
+   "range": 110,
+   "w": 96,
+   "y0": 498,
+   "y1": 568,
+   "periodMs": 1500
+  },
+  {
+   "id": "spi-sand-1",
+   "type": "sandTrap",
+   "role": "slow",
+   "x": 16500,
+   "x1": 17100,
+   "speedMult": 0.3
+  },
+  {
+   "id": "spi-sand-2",
+   "type": "sandTrap",
+   "role": "slow",
+   "x": 25500,
+   "x1": 25980,
+   "speedMult": 0.3
+  },
+  {
+   "id": "spi-embedded-silica",
+   "type": "embeddedSilica",
+   "role": "trigger",
+   "x": 18600,
+   "radius": 60,
+   "hintRadius": 260,
+   "reveals": "spi-f07"
+  }
+ ],
+ "landmarks": [
+  {
+   "id": "spi-columbia-station",
+   "type": "columbiaStation",
+   "role": "decoration",
+   "x": -40,
+   "label": "COLUMBIA MEMORIAL STATION"
+  }
+ ],
+ "pickups": {
+  "fragments": [
+   {
+    "role": "pickup",
+    "id": "spi-f01",
+    "n": 1,
+    "displayText": "Landed Jan 3, 2004 at Gusev Crater, a possible former lake!",
+    "x": 2400,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f02",
+    "n": 2,
+    "displayText": "Identical twin to Opportunity. Goal: search for signs of past water.",
+    "x": 5100,
+    "y": 330
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f03",
+    "n": 3,
+    "displayText": "My landing site was named the Columbia Memorial Station.",
+    "x": 7200,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f04",
+    "n": 4,
+    "displayText": "Traveled 250 meters northeast to a large 200-meter-wide crater.",
+    "x": 12300,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f05",
+    "n": 5,
+    "displayText": "Headed toward the east hills, about 3 kilometers away.",
+    "x": 9600,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f06",
+    "n": 6,
+    "displayText": "Panoramic camera captured images using green, blue, and infrared filters.",
+    "x": 15600,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f07",
+    "n": 7,
+    "displayText": "Powered by solar panels that brave the harsh Martian elements.",
+    "hiddenUntil": "spi-embedded-silica"
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f08",
+    "n": 8,
+    "displayText": "Found evidence that water was long standing on ancient Mars.",
+    "x": 21450,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f09",
+    "n": 9,
+    "displayText": "Journeyed a total of 4.8 miles, or 7.7 kilometers, on Mars.",
+    "x": 24600,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "spi-f10",
+    "n": 10,
+    "displayText": "Last contact: March 2010. Mission formally ended in May 2011.",
+    "x": 28500,
+    "y": 550
+   }
+  ],
+  "batteries": [
+   {
+    "id": "spi-battery-1",
+    "role": "pickup",
+    "x": 5400,
+    "y": 540
+   },
+   {
+    "id": "spi-battery-2",
+    "role": "pickup",
+    "x": 11700,
+    "y": 540
+   },
+   {
+    "id": "spi-battery-3",
+    "role": "pickup",
+    "x": 18180,
+    "y": 540
+   },
+   {
+    "id": "spi-battery-4",
+    "role": "pickup",
+    "x": 21600,
+    "y": 540
+   },
+   {
+    "id": "spi-battery-5",
+    "role": "pickup",
+    "x": 26400,
+    "y": 540
+   }
+  ]
+ },
+ "tutorials": [
+  {
+   "id": "spi-t1",
+   "slot": 1,
+   "keyCaption": "SPACE",
+   "accepts": [
+    "SPACE"
+   ],
+   "text": "Jump! Press [SPACE] to clear gaps and craters.",
+   "triggerX": 600,
+   "hazardX": 1200,
+   "clearX": 1450
+  },
+  {
+   "id": "spi-t2",
+   "slot": 2,
+   "keyCaption": "SHIFT",
+   "accepts": [
+    "SHIFT"
+   ],
+   "text": "Obstacle ahead! Press [SHIFT] to Trench-Scrape Slide underneath.",
+   "triggerX": 3600,
+   "hazardX": 4200,
+   "clearX": 4456
+  },
+  {
+   "id": "spi-t3",
+   "slot": 3,
+   "keyCaption": "SHIFT / SPACE",
+   "accepts": [
+    "SHIFT",
+    "SPACE"
+   ],
+   "text": "Warning: Dust Devils drain health! Slide or Jump to evade.",
+   "triggerX": 8250,
+   "hazardX": 8850,
+   "clearX": 9160
+  },
+  {
+   "id": "spi-t4",
+   "slot": 4,
+   "keyCaption": "E / SHIFT",
+   "accepts": [
+    "E",
+    "SHIFT"
+   ],
+   "text": "Troy Sand Traps slow you down. Boost or Slide to escape!",
+   "triggerX": 15900,
+   "hazardX": 16500,
+   "clearX": 16860
+  }
+ ],
+ "checkpoints": [
+  {
+   "id": "spi-cp1",
+   "slot": 1,
+   "p": 0.25,
+   "title": "CHECKPOINT 1 // THE ARRIVAL",
+   "log": "SYSTEM LOG 01: I am Spirit, one of two identical twin robots sent to Mars. I landed at Gusev Crater on Jan 3, 2004. This area is a giant impact crater and a possible former lake. My landing site is officially the Columbia Memorial Station!",
+   "x": 7500
+  },
+  {
+   "id": "spi-cp2",
+   "slot": 2,
+   "p": 0.5,
+   "title": "CHECKPOINT 2 // THE GEOLOGIST",
+   "log": "SYSTEM LOG 02: I'm on the move. My current path takes me 250 meters northeast to a massive crater about 200 meters across. After that, I'm setting my sights on the east hills, which are about 3 kilometers away. My panoramic camera is capturing it all.",
+   "x": 15000
+  },
+  {
+   "id": "spi-cp3",
+   "slot": 3,
+   "p": 0.75,
+   "title": "CHECKPOINT 3 // THE GREAT DISCOVERY",
+   "log": "SYSTEM LOG 03: My journey is yielding incredible results. By studying the rock record across these 4.8 miles (7.7 kilometers), I've found evidence that water was long standing on the surface of Mars in ancient times. We are rewriting history!",
+   "x": 22500
+  }
+ ],
+ "quiz": [
+  {
+   "id": "spi-q1",
+   "question": "Where did Spirit land to search for signs of past water?",
+   "options": [
+    {
+     "id": "spi-q1-a",
+     "text": "Meridiani Planum"
+    },
+    {
+     "id": "spi-q1-b",
+     "text": "Gusev Crater"
+    },
+    {
+     "id": "spi-q1-c",
+     "text": "Ares Vallis"
+    }
+   ],
+   "correct": "spi-q1-b",
+   "explanation": "Check SYSTEM LOG 01: Spirit landed at Gusev Crater, a giant impact crater and possible former lake. Meridiani Planum was Opportunity's site; Ares Vallis was Pathfinder's.",
+   "taughtBy": "spi-cp1",
+   "taughtPhrase": "Gusev Crater"
+  },
+  {
+   "id": "spi-q2",
+   "question": "What was the total distance Spirit journeyed across the Martian surface?",
+   "options": [
+    {
+     "id": "spi-q2-a",
+     "text": "4.8 miles / 7.7 km"
+    },
+    {
+     "id": "spi-q2-b",
+     "text": "28.06 miles / 45.16 km"
+    },
+    {
+     "id": "spi-q2-c",
+     "text": "250 meters"
+    }
+   ],
+   "correct": "spi-q2-a",
+   "explanation": "Check SYSTEM LOG 03: Spirit studied the rock record across 4.8 miles (7.7 kilometers). 28.06 miles was Opportunity's total.",
+   "taughtBy": "spi-cp3",
+   "taughtPhrase": "4.8 miles"
+  }
+ ],
+ "codex": {
+  "file": "Archive File: MER-A (Spirit)",
+  "sections": [
+   {
+    "id": "spi-cx-profile",
+    "heading": "Mission Profile",
+    "body": "NASA’s Spirit rover was one half of an identical twin robot pair (alongside Opportunity) sent to rewrite our understanding of the early history of Mars. It landed on January 3, 2004 (PST; January 4 UTC), at Gusev Crater, a possible former lake inside a giant impact crater. Its landing site was named the Columbia Memorial Station."
+   },
+   {
+    "id": "spi-cx-journey",
+    "heading": "The Journey",
+    "body": "Spirit's early traverse included traveling 250 meters northeast to a large 200-meter-wide crater, before heading toward the east hills located about 3 kilometers away from the lander. By its last contact in March 2010, Spirit had journeyed a total of 4.8 miles (7.7 kilometers) across the Martian surface. NASA formally ended the mission in May 2011."
+   },
+   {
+    "id": "spi-cx-discoveries",
+    "heading": "Major Discoveries",
+    "body": "Spirit's primary objective was to look for signs of past water. By studying the Martian rock record, Spirit found evidence that water was long standing on the surface of Mars in ancient times."
+   },
+   {
+    "id": "spi-cx-hardware",
+    "heading": "Hardware & Imaging",
+    "body": "Spirit was equipped with a panoramic camera (Pancam) that combined data from green, blue, and infrared filters to create approximate true-color images of the Martian landscape. The rover was powered by solar panels that were visible at the front of its chassis."
+   }
+  ],
+  "notes": [
+   "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.",
+   "Jumping, the Trench-Scrape Slide, boosting and dust-devil damage are arcade abstractions. The slide is inspired by Spirit's jammed wheel scraping the soil."
+  ],
+  "archiveNotes": [
+   "SYSTEM LOG entries are dramatizations written for the game, not quotations from messages the rovers transmitted."
+  ],
+  "sources": [
+   {
+    "label": "science.nasa.gov/mission/mer-spirit/",
+    "url": "https://science.nasa.gov/mission/mer-spirit/"
+   },
+   {
+    "label": "science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/",
+    "url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
+   }
+  ]
+ },
+ "theme": {
+  "id": "gusev",
+  "raster": true
+ },
+ "storm": null,
+ "hud": {
+  "energy": true,
+  "ability": "SLIDE"
+ }
+}

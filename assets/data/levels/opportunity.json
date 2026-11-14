@@ -1,0 +1,653 @@
+{
+ "schemaVersion": 1,
+ "id": "opportunity",
+ "order": 3,
+ "title": "Opportunity",
+ "subtitle": "Meridiani Planum, 2004",
+ "missionDates": {
+  "landing": "Jan. 24, 2004",
+  "timeConvention": "PST (Jan. 25 UTC)"
+ },
+ "sourceScript": {
+  "file": "rover_rush_opportunity_script.md",
+  "version": "1"
+ },
+ "sources": [
+  "https://science.nasa.gov/mission/mer-opportunity/",
+  "https://science.nasa.gov/resource/lion-king-panorama/",
+  "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/",
+  "https://science.nasa.gov/blogs/perseverance-mars-rover/2026/10/12/nasas-perseverance-sets-off-world-record-for-total-distance-driven/"
+ ],
+ "rover": {
+  "id": "opportunity",
+  "texture": "rover",
+  "frameWidth": 176,
+  "frameHeight": 136,
+  "origin": {
+   "x": 0.5,
+   "y": 0.5
+  },
+  "displayScale": 1,
+  "body": {
+   "w": 100,
+   "h": 84,
+   "offsetX": 38,
+   "footY": 134
+  },
+  "pickupHeight": 118,
+  "clips": {
+   "idle": {
+    "frames": [
+     0,
+     1
+    ],
+    "frameDurationMs": 500,
+    "repeat": -1
+   },
+   "run": {
+    "frames": [
+     2,
+     3,
+     4,
+     5
+    ],
+    "frameDurationMs": 83.33,
+    "repeat": -1
+   },
+   "jump": {
+    "frames": [
+     6
+    ],
+    "frameDurationMs": 100,
+    "repeat": 0
+   },
+   "damage": {
+    "frames": [
+     8,
+     9
+    ],
+    "frameDurationMs": 71.43,
+    "repeat": -1
+   }
+  }
+ },
+ "physics": {
+  "units": "px, px/s, px/s^2, ms",
+  "coyoteMs": 90,
+  "jumpHoldAccel": 1400,
+  "jumpHoldMaxMs": 300,
+  "cruiseSpeed": 345,
+  "gravity": 800,
+  "jumpVelocity": 336
+ },
+ "ability": {
+  "id": "solarWindBoost",
+  "params": {
+   "boostSpeed": 750,
+   "durationMs": 7000,
+   "rechargeMs": 3000,
+   "spiritBoostSpeed": 450,
+   "spiritBoostMs": 4651
+  }
+ },
+ "world": {
+  "length": 48000,
+  "groundY": 620,
+  "startX": 0,
+  "finishX": 48000,
+  "spawnX": 140,
+  "seed": 2018,
+  "killY": 790
+ },
+ "terrain": {
+  "ground": [
+   {
+    "x0": -1200,
+    "x1": 1400,
+    "top": 690,
+    "role": "solid",
+    "style": "craterFloor"
+   },
+   {
+    "x0": 1400,
+    "x1": 1700,
+    "top": 645,
+    "role": "solid",
+    "style": "craterFloor"
+   },
+   {
+    "x0": 1700,
+    "x1": 5200,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 5600,
+    "x1": 6400,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 6400,
+    "x1": 7300,
+    "top": 520,
+    "role": "solid",
+    "style": "outcrop"
+   },
+   {
+    "x0": 7300,
+    "x1": 9800,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 10250,
+    "x1": 14600,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 14600,
+    "x1": 15600,
+    "top": 500,
+    "role": "solid",
+    "style": "outcrop"
+   },
+   {
+    "x0": 15600,
+    "x1": 17000,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 17880,
+    "x1": 21500,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 21950,
+    "x1": 26200,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 27100,
+    "x1": 28000,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 28000,
+    "x1": 28800,
+    "top": 540,
+    "role": "solid",
+    "style": "outcrop"
+   },
+   {
+    "x0": 28800,
+    "x1": 30200,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 31130,
+    "x1": 33400,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 34300,
+    "x1": 39000,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 39420,
+    "x1": 42500,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 42950,
+    "x1": 45000,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   },
+   {
+    "x0": 45000,
+    "x1": 45700,
+    "top": 540,
+    "role": "solid",
+    "style": "outcrop"
+   },
+   {
+    "x0": 45700,
+    "x1": 50600,
+    "top": 620,
+    "role": "solid",
+    "style": "plain"
+   }
+  ],
+  "platforms": []
+ },
+ "safeZones": [
+  {
+   "x0": 11600,
+   "x1": 12400
+  },
+  {
+   "x0": 23600,
+   "x1": 24400
+  },
+  {
+   "x0": 35600,
+   "x1": 36400
+  }
+ ],
+ "hazards": [
+  {
+   "id": "opp-gust-1",
+   "type": "gust",
+   "role": "trigger",
+   "x": 3500,
+   "x1": 3800
+  },
+  {
+   "id": "opp-gust-2",
+   "type": "gust",
+   "role": "trigger",
+   "x": 15800,
+   "x1": 16100
+  },
+  {
+   "id": "opp-gust-3",
+   "type": "gust",
+   "role": "trigger",
+   "x": 24800,
+   "x1": 25100
+  },
+  {
+   "id": "opp-gust-4",
+   "type": "gust",
+   "role": "trigger",
+   "x": 28900,
+   "x1": 29200
+  },
+  {
+   "id": "opp-gust-5",
+   "type": "gust",
+   "role": "trigger",
+   "x": 32300,
+   "x1": 32600
+  },
+  {
+   "id": "opp-plume-1",
+   "type": "dustPlume",
+   "role": "damage",
+   "x": 8400,
+   "w": 90,
+   "y0": 560,
+   "y1": 620,
+   "drift": 30,
+   "periodMs": 2400,
+   "tickMs": 900
+  },
+  {
+   "id": "opp-plume-2",
+   "type": "dustPlume",
+   "role": "damage",
+   "x": 19500,
+   "w": 100,
+   "y0": 556,
+   "y1": 620,
+   "drift": 30,
+   "periodMs": 2400,
+   "tickMs": 900
+  },
+  {
+   "id": "opp-plume-3",
+   "type": "dustPlume",
+   "role": "damage",
+   "x": 37200,
+   "w": 100,
+   "y0": 560,
+   "y1": 620,
+   "drift": 30,
+   "periodMs": 2400,
+   "tickMs": 900
+  },
+  {
+   "id": "opp-plume-4",
+   "type": "dustPlume",
+   "role": "damage",
+   "x": 41000,
+   "w": 110,
+   "y0": 556,
+   "y1": 620,
+   "drift": 30,
+   "periodMs": 2400,
+   "tickMs": 900
+  },
+  {
+   "id": "opp-plume-5",
+   "type": "dustPlume",
+   "role": "damage",
+   "x": 44000,
+   "w": 100,
+   "y0": 560,
+   "y1": 620,
+   "drift": 30,
+   "periodMs": 2400,
+   "tickMs": 900
+  }
+ ],
+ "landmarks": [
+  {
+   "id": "opp-eagle-rim",
+   "type": "craterRim",
+   "role": "decoration",
+   "x": 1400,
+   "label": "EAGLE CRATER"
+  },
+  {
+   "id": "opp-endurance-rim",
+   "type": "craterRim",
+   "role": "decoration",
+   "x": 26200,
+   "label": "ENDURANCE CRATER"
+  }
+ ],
+ "pickups": {
+  "fragments": [
+   {
+    "role": "pickup",
+    "id": "opp-f01",
+    "n": 1,
+    "displayText": "Landed Jan. 24, 2004, at Meridiani Planum, opposite side from Spirit!",
+    "x": 2200,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f02",
+    "n": 2,
+    "displayText": "Mineral deposits here suggested Mars once had a wet history.",
+    "x": 4400,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f03",
+    "n": 3,
+    "displayText": "Examined rock outcrops and soils right behind my landing site.",
+    "x": 6800,
+    "y": 450
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f04",
+    "n": 4,
+    "displayText": "Successfully climbed out of Eagle Crater toward giant Endurance Crater!",
+    "x": 9000,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f05",
+    "n": 5,
+    "displayText": "Captured the 558-image 'Lion King' panorama—over 75 megabytes of data!",
+    "x": 13000,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f06",
+    "n": 6,
+    "displayText": "Martian winds swept dust off my solar panels, extending my life.",
+    "x": 16500,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f07",
+    "n": 7,
+    "displayText": "Snapped a March 2014 self-portrait showing freshly wind-cleaned solar panels.",
+    "x": 20000,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f08",
+    "n": 8,
+    "displayText": "Confirmed ancient water was long standing on the Martian surface.",
+    "x": 28400,
+    "y": 470
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f09",
+    "n": 9,
+    "displayText": "Held the off-Earth roving record at 28.06 miles (45.16 kilometers)!",
+    "x": 31800,
+    "y": 550
+   },
+   {
+    "role": "pickup",
+    "id": "opp-f10",
+    "n": 10,
+    "displayText": "Last communicated June 10, 2018, during a planet-wide dust storm.",
+    "x": 46500,
+    "y": 550
+   }
+  ],
+  "batteries": []
+ },
+ "tutorials": [
+  {
+   "id": "opp-t1",
+   "slot": 1,
+   "keyCaption": "SPACE",
+   "accepts": [
+    "SPACE"
+   ],
+   "text": "Press [SPACE] to leap out of Eagle Crater onto the Meridiani plains!",
+   "triggerX": 710,
+   "hazardX": 1400,
+   "clearX": 1780
+  },
+  {
+   "id": "opp-t2",
+   "slot": 2,
+   "keyCaption": "SHIFT",
+   "accepts": [
+    "SHIFT"
+   ],
+   "text": "Solar panels dusty! Press [SHIFT] for a Wind-Cleaned Solar Boost!",
+   "note": "Local Martian winds cleaned Opportunity's panels. The boost itself is an arcade ability, not a real rover capability.",
+   "triggerX": 2810,
+   "hazardX": 3500,
+   "clearX": 3880
+  },
+  {
+   "id": "opp-t3",
+   "slot": 3,
+   "keyCaption": "SPACE + SHIFT",
+   "accepts": [
+    "SPACE"
+   ],
+   "text": "Jump onto outcrops; combine [SPACE] and [SHIFT] across wide gaps.",
+   "triggerX": 5710,
+   "hazardX": 6400,
+   "clearX": 6560
+  },
+  {
+   "id": "opp-t4",
+   "slot": 4,
+   "keyCaption": "SHIFT",
+   "accepts": [
+    "SHIFT",
+    "SPACE"
+   ],
+   "text": "Storm blocks sunlight! Boost across gaps; reach the final archive.",
+   "triggerX": 38310,
+   "hazardX": 39000,
+   "clearX": 39500
+  }
+ ],
+ "checkpoints": [
+  {
+   "id": "opp-cp1",
+   "slot": 1,
+   "p": 0.25,
+   "title": "CHECKPOINT 1 // EAGLE CRATER & MERIDIANI PLANUM",
+   "log": "SYSTEM LOG 01: I am Opportunity, identical twin to Spirit. I landed on Jan. 24, 2004, at Meridiani Planum—a region rich in mineral deposits pointing to a wet Martian history. After studying the soils and rock outcrop inside Eagle Crater, I've made a successful exit onto the open plains!",
+   "x": 12000
+  },
+  {
+   "id": "opp-cp2",
+   "slot": 2,
+   "p": 0.5,
+   "title": "CHECKPOINT 2 // THE LION KING PANORAMA & ENDURANCE",
+   "log": "SYSTEM LOG 02: My panoramic camera just captured 558 images—over 75 megabytes of data—to create the 'Lion King' panorama! Next stop: the massive crater dubbed 'Endurance.' Good thing local Martian winds keep sweeping dust off my solar panels so I can keep rolling.",
+   "x": 24000
+  },
+  {
+   "id": "opp-cp3",
+   "slot": 3,
+   "p": 0.75,
+   "title": "CHECKPOINT 3 // MARATHON RECORD & THE STORM",
+   "log": "SYSTEM LOG 03: I've accrued 28.06 miles (45.16 kilometers), setting the off-Earth roving distance record! Together with Spirit, I've confirmed water once stood on ancient Mars. Warning: a massive, planet-wide dust storm is blanketing the horizon, blocking out the sun...",
+   "x": 36000
+  }
+ ],
+ "quiz": [
+  {
+   "id": "opp-q1",
+   "question": "How far did Opportunity travel across Mars before falling silent in June 2018?",
+   "options": [
+    {
+     "id": "opp-q1-a",
+     "text": "4.8 miles (7.7 kilometers)"
+    },
+    {
+     "id": "opp-q1-b",
+     "text": "28.06 miles (45.16 kilometers)"
+    },
+    {
+     "id": "opp-q1-c",
+     "text": "1 kilometer"
+    }
+   ],
+   "correct": "opp-q1-b",
+   "explanation": "Check SYSTEM LOG 03: Opportunity accrued 28.06 miles (45.16 kilometers). 4.8 miles was Spirit's total.",
+   "taughtBy": "opp-cp3",
+   "taughtPhrase": "28.06 miles"
+  },
+  {
+   "id": "opp-q2",
+   "question": "What event accompanied Opportunity's final communication on June 10, 2018?",
+   "options": [
+    {
+     "id": "opp-q2-a",
+     "text": "Getting stuck in a soft sand trap"
+    },
+    {
+     "id": "opp-q2-b",
+     "text": "A jammed front wheel"
+    },
+    {
+     "id": "opp-q2-c",
+     "text": "A planet-wide dust storm blocking sunlight needed for solar power."
+    }
+   ],
+   "correct": "opp-q2-c",
+   "explanation": "Check SYSTEM LOG 03: a planet-wide dust storm was blocking out the sun. The sand trap and jammed wheel were Spirit's troubles.",
+   "taughtBy": "opp-cp3",
+   "taughtPhrase": "planet-wide dust storm"
+  }
+ ],
+ "codex": {
+  "file": "Archive File: MER-B (Opportunity)",
+  "sections": [
+   {
+    "id": "opp-cx-profile",
+    "heading": "Mission Profile",
+    "body": "NASA’s Opportunity rover was the identical twin to Spirit, landing on the opposite side of Mars on January 24, 2004 (PST; January 25 UTC), at Meridiani Planum—a site targeted because its mineral deposits suggested a wet Martian history. Like Spirit, its primary objective was to search for signs of past water."
+   },
+   {
+    "id": "opp-cx-lionking",
+    "heading": "Early Exploration & The \"Lion King\" Panorama",
+    "body": "Opportunity began its mission inside \"Eagle Crater,\" thoroughly examining the rock outcrop behind its lander and the surrounding soils before successfully exiting toward the large crater dubbed \"Endurance.\" On sols 58 and 60, its panoramic camera (Pancam) captured 558 images (over 75 megabytes of data) using infrared, green, and blue filters to form the famous approximate true-color \"Lion King\" panorama."
+   },
+   {
+    "id": "opp-cx-record",
+    "heading": "Endurance & Distance Record",
+    "body": "Aided by Martian winds that periodically cleaned dust off its solar panels (documented in a March 2014 self-portrait), Opportunity far outlived its original mission. By the time it fell silent, Opportunity had accrued 28.06 miles (45.16 kilometers) of driving. Opportunity set an off-world driving record; Perseverance surpassed its final distance on October 11, 2026."
+   },
+   {
+    "id": "opp-cx-final",
+    "heading": "Major Discoveries & Final Transmission",
+    "body": "By studying the Martian rock record, Opportunity and Spirit confirmed that liquid water was long standing on the surface of Mars in ancient times. Opportunity last communicated with Earth on June 10, 2018, as a planet-wide dust storm blocked the sunlight its solar panels needed. NASA declared the mission ended on February 13, 2019."
+   }
+  ],
+  "notes": [
+   "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.",
+   "\"Solar Wind Boost\" is the game ability's name. Local Martian atmospheric winds cleaned Opportunity's panels; the solar wind (particles streaming from the Sun) was not the cleaning mechanism.",
+   "Boost propulsion, jumping and the storm's visuals are arcade abstractions. Course distance is compressed narrative scale, not the real 45.16 km."
+  ],
+  "archiveNotes": [
+   "SYSTEM LOG entries are dramatizations written for the game, not quotations from messages the rovers transmitted."
+  ],
+  "sources": [
+   {
+    "label": "science.nasa.gov/mission/mer-opportunity/",
+    "url": "https://science.nasa.gov/mission/mer-opportunity/"
+   },
+   {
+    "label": "science.nasa.gov/resource/lion-king-panorama/",
+    "url": "https://science.nasa.gov/resource/lion-king-panorama/"
+   },
+   {
+    "label": "science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/",
+    "url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
+   },
+   {
+    "label": "science.nasa.gov/blogs/perseverance-mars-rover/2026/10/12/nasas-perseverance-sets-off-world-record-for-total-distance-driven/",
+    "url": "https://science.nasa.gov/blogs/perseverance-mars-rover/2026/10/12/nasas-perseverance-sets-off-world-record-for-total-distance-driven/"
+   }
+  ]
+ },
+ "theme": {
+  "id": "meridiani",
+  "palette": [
+   "#b8925a",
+   "#d6b98a",
+   "#7a5a3a"
+  ],
+  "sky": "#c9a06a"
+ },
+ "storm": {
+  "startP": 0.75,
+  "maxOverlay": 0.65,
+  "color": "#7a4a1e"
+ },
+ "hud": {
+  "energy": false,
+  "ability": "BOOST",
+  "distanceLabel": "Narrative scale"
+ }
+}
