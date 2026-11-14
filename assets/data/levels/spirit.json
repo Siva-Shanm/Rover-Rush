@@ -90,7 +90,7 @@
   "energy": {
    "max": 100,
    "regenPerSec": 2.5,
-   "jumpCost": 4,
+   "jumpCost": 0,
    "devilDrain": 15,
    "batteryCharge": 40
   },

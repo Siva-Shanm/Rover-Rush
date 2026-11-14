@@ -111,8 +111,9 @@ class UIController {
         key.textContent = t.keyCaption;
         key.classList.remove('ok');
         const cont = this.$('tutorial-continue');
-        cont.textContent = this.c.ui.continue;
-        cont.onclick = () => onContinue();
+        cont.textContent = this.c.ui.confirmTutorial;
+        cont.onclick = (ev) => { ev.preventDefault(); cont.blur(); onContinue(); };
+        this.$('tutorial-hint').textContent = this.c.ui.confirmHint;
         this.$('tutorial').classList.remove('hidden');
     }
 
@@ -197,6 +198,7 @@ class UIController {
                 <div class="tag">${E(m.challenge)}</div>
                 <h1>${E(m.title)}</h1>
                 <div class="sub">${E(m.subtitle)}</div>
+                <div class="notice" role="note">${E(ui.mobileNotice)}</div>
                 ${loader}
                 <div class="cards">${cards}</div>
                 <div class="fact" aria-live="polite"><span class="fact-tag">${E(ui.didYouKnow)}</span> <span id="fact-text"></span>
@@ -325,6 +327,25 @@ class UIController {
             <div class="btn-row"><button class="btn" id="b-close">${E(ui.close)}</button></div>`);
         this._bind('b-close', () => { this.close(); if (onClose) onClose(); });
     }
+
+    // ============================================================== pause
+    showPause({ onResume, onMenu }) {
+        const E = UIController.escape, ui = this.c.ui;
+        this._pauseCb = { onResume, onMenu };
+        this._open(`
+            <div class="center">
+                <h1>${E(ui.paused)}</h1>
+                <div class="btn-row">
+                    <button class="btn amber" id="b-resume" data-autofocus>${E(ui.resume)}</button>
+                    <button class="btn" id="b-menu">${E(ui.menu)}</button>
+                </div>
+                <p class="tag">${E(ui.pauseHint)}</p>
+            </div>`, 'pause');
+        this._bind('b-resume', () => onResume());
+        this._bind('b-menu', () => onMenu());
+    }
+
+    isPauseOpen() { return this.isModalOpen() && this.panel.classList.contains('pause'); }
 
     // ============================================================ game over
     showGameOver({ onRetry, onMenu }) {

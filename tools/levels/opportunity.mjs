@@ -143,6 +143,19 @@ export function verify(level) {
     // required boost is always affordable: cost <= gust charge.
     const E = level.physics.energy;
     if (A.energyCost > E.gustCharge) fail.push(`boost cost ${A.energyCost} exceeds gust recharge ${E.gustCharge}`);
+    // zero-energy recovery: arrive at each wide gap's gust with 0 % energy -> gust charge + regen until the
+    // boost press point (~500 px before the brink) must cover the boost cost.
+    let tightest = null;
+    for (let i = 0; i < g.length - 1; i++) {
+        const w = g[i + 1].x0 - g[i].x1;
+        if (w <= 700) continue;
+        const gust = level.hazards.filter((h) => h.type === 'gust' && h.x1 <= g[i].x1).pop();
+        const travelS = Math.max(0, (g[i].x1 - 500) - gust.x1) / P.cruiseSpeed;
+        const avail = Math.min(E.max, E.gustCharge + E.regenPerSec * travelS);
+        if (!tightest || avail - A.energyCost < tightest.slack) tightest = { gap: g[i].x1, w, gust: gust.id, avail, slack: avail - A.energyCost };
+        if (avail < A.energyCost) fail.push(`wide gap @${g[i].x1}: only ${avail.toFixed(0)}% available from zero energy (cost ${A.energyCost})`);
+    }
+    out.push(`zero-energy recovery: tightest crossing @${tightest.gap} (${tightest.w}px) via ${tightest.gust}: ${tightest.avail.toFixed(1)}% available vs ${A.energyCost}% cost`);
     out.push(`energy: boost costs ${A.energyCost}%, each gust zone recharges ${E.gustCharge}% before every wide gap; solar regen ${E.regenPerSec}%/s`);
     if (fail.length) throw new Error('Opportunity verify failed:\n  ' + fail.join('\n  '));
     return out;

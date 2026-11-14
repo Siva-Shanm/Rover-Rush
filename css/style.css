@@ -309,3 +309,11 @@ img { image-rendering: pixelated; }
 .tutorial { pointer-events: auto; }
 .tutorial-note { font-size: calc(var(--u) * 24); color: #ffd9a8; margin: calc(var(--u) * -4) 0 calc(var(--u) * 10); }
 .tutorial-row { display: flex; gap: calc(var(--u) * 20); justify-content: center; align-items: center; }
+
+/* ================= Round 2 ================= */
+.hud-pause { pointer-events: auto; margin-top: calc(var(--u) * 6); }
+.tutorial-hint { font-size: calc(var(--u) * 22); color: #ffd9a8; }
+.notice { margin: calc(var(--u) * 8) auto 0; max-width: calc(var(--u) * 900); padding: calc(var(--u) * 4) calc(var(--u) * 12);
+    border: calc(var(--u) * 2) solid var(--bad); color: #ffd0c8; font-size: calc(var(--u) * 24); line-height: 1.15; }
+.panel.pause { width: calc(var(--u) * 520); }
+@media (max-width: 700px) { .cards { flex-wrap: wrap; } .card { width: calc(var(--u) * 520); } .notice { font-size: calc(var(--u) * 30); } }

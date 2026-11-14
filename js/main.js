@@ -62,6 +62,16 @@
     };
     window.RoverRush = app;
 
+    const gameScene = () => window.game && window.game.scene.keys.GameScene;
+    const togglePause = () => {
+        const g = gameScene();
+        if (!g || !g.sys.isActive() && !g.sys.isPaused()) return;
+        if (UI.isPauseOpen()) g.resumeGame();
+        else if (!UI.isModalOpen() && g.state === 'run') g.pauseGame();
+    };
+    window.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !ev.repeat) { ev.preventDefault(); togglePause(); } });
+    document.getElementById('hud-pause').addEventListener('click', (ev) => { ev.currentTarget.blur(); togglePause(); });
+
     const start = () => {
         window.UI = new UIController(ContentDatabase);
         app.openMenu();                              // menu first, with live loader

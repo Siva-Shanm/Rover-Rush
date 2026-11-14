@@ -10,12 +10,41 @@ Working handoff for the three-mission upgrade (Sojourner, Spirit V2, Opportunity
 
 | Field | Value |
 | --- | --- |
-| Last updated | 2026-11-14: all milestones implemented; energy bar + energy-gated abilities added for Sojourner/Opportunity (user request) |
+| Last updated | 2026-11-14: **Round 2 complete** (all 8 + zero-energy check), pushed to main |
 | PRD | Not in the checkout. It was attached to the session as `Rover_Rush_-_Final_Claude_Code_Master_Upgrade_Prompt.md`. **Re-attach it when resuming.** |
 | Branch | `claude/clever-galileo-t5dz1n` (pushed to origin; `main` receives merges on request) |
 | Starting commit | `b15ac95` (merge of `origin/main`: new scripts and Sojourner art) |
 | Pre-existing local edits | none (clean tree at start) |
 | Last known buildable state | `b15ac95`: Spirit-only game, all checks passing (bot playthrough 3/3 HP, 10/10 fragments) |
+
+## Round 2 (8 requirements + Opportunity zero-energy check)
+
+Baseline at `a4352a2`:
+- Sojourner: cruise 240 px/s, hop 202 px/s, bounce 454 px/s, gravity 800.
+- Opportunity: boost cost 30% (kept), gust +40%, regen 2.5 %/s.
+- Spirit: jumpCost 4 → must become 0.
+
+| # | Requirement | Status |
+| --- | --- | --- |
+| 1 | Opportunity red background, storm only from p 0.75 trigger | done ✓ |
+| 2 | Boost energy once per activation; free jumps (Spirit jumpCost→0) | done ✓ |
+| 3 | Damaging dust + pebble visibility | done ✓ |
+| 4 | Sojourner cruise ×1.10 = 264, slightly higher hop | done ✓ |
+| 5 | Pause button + Esc (Resume / Main Menu) | done ✓ |
+| 6 | Sojourner t2 wording | done ✓ |
+| 7 | X / click Confirm on every tutorial | done ✓ |
+| 8 | Mobile notice on menu | done ✓ |
+| + | Opportunity zero-energy recovery at tightest crossing | done ✓ |
+
+Round 2 results:
+- Sojourner: cruise 240 → 264, hop 202 → 222 px/s (apex 25 → 30 px), bounce 454 and gravity 800 unchanged.
+- Sojourner channels 340 → 380 px; bounce gap 200 → 240 px; one pebble moved 2400 → 2250 to keep the tutorial approach clear.
+- Spirit jump cost 4 → 0. Opportunity boost cost 30% kept (gust +40%, regen 2.5%/s).
+- Zero-energy check, tightest crossing (33400, 900 px, gust-5): 42% predicted by the sim, 49% measured in the browser, crossed with no damage.
+- Verification:
+  - `node tools/build_levels.mjs`: all sims ✓.
+  - `node tools/check_content.mjs`: 1158 assertions, 0 failures.
+  - Browser smoke `<scratchpad>/round2.js`: 17/18 passed. The one failure was an over-strict assertion: the storm q measured 0.87 against a 0.9 threshold at p 0.958, and its expected value there is about 0.83.
 
 ## Repository reality vs PRD assumptions
 

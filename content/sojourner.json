@@ -15,11 +15,11 @@
     {
       "id": "soj-t2",
       "slot": 2,
-      "keyCaption": "SHIFT",
+      "keyCaption": "SPACE, then SHIFT",
       "accepts": [
         "SHIFT"
       ],
-      "text": "Tall obstacle ahead! Press [SHIFT] to deploy Airbags and bounce high!",
+      "text": "Press SPACE to jump, then press SHIFT while airborne to deploy your airbags and double jump.",
       "note": "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump."
     },
     {

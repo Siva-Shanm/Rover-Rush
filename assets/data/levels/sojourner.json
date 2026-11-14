@@ -169,9 +169,9 @@
   "coyoteMs": 90,
   "jumpHoldAccel": 0,
   "jumpHoldMaxMs": 0,
-  "cruiseSpeed": 240,
+  "cruiseSpeed": 264,
   "gravity": 800,
-  "jumpVelocity": 202,
+  "jumpVelocity": 222,
   "energy": {
    "max": 100,
    "regenPerSec": 2.5,
@@ -215,19 +215,19 @@
     "role": "solid"
    },
    {
-    "x0": 8200,
+    "x0": 8240,
     "x1": 10600,
     "top": 620,
     "role": "solid"
    },
    {
-    "x0": 10940,
+    "x0": 10980,
     "x1": 14300,
     "top": 620,
     "role": "solid"
    },
    {
-    "x0": 14640,
+    "x0": 14680,
     "x1": 20600,
     "top": 620,
     "role": "solid"
@@ -272,7 +272,7 @@
    "id": "soj-pebble-3",
    "type": "pebble",
    "role": "damage",
-   "x": 2400,
+   "x": 2250,
    "w": 10,
    "h": 6,
    "variant": 2
@@ -525,20 +525,20 @@
     "SPACE"
    ],
    "text": "Press [SPACE] for a short hop over small Martian pebbles.",
-   "triggerX": 920,
+   "triggerX": 872,
    "hazardX": 1400,
    "clearX": 1492
   },
   {
    "id": "soj-t2",
    "slot": 2,
-   "keyCaption": "SHIFT",
+   "keyCaption": "SPACE, then SHIFT",
    "accepts": [
     "SHIFT"
    ],
-   "text": "Tall obstacle ahead! Press [SHIFT] to deploy Airbags and bounce high!",
+   "text": "Press SPACE to jump, then press SHIFT while airborne to deploy your airbags and double jump.",
    "note": "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump.",
-   "triggerX": 2420,
+   "triggerX": 2372,
    "hazardX": 2900,
    "clearX": 3028
   },
@@ -550,7 +550,7 @@
     "SHIFT"
    ],
    "text": "Warning: Magnetic dust drains power! Bounce high to evade.",
-   "triggerX": 5296,
+   "triggerX": 5248,
    "hazardX": 5776,
    "clearX": 5984
   },
@@ -562,9 +562,9 @@
     "SHIFT"
    ],
    "text": "Wide flood plain gap! Combine [SPACE] and [SHIFT] to clear it.",
-   "triggerX": 10120,
+   "triggerX": 10072,
    "hazardX": 10600,
-   "clearX": 11020
+   "clearX": 11060
   }
  ],
  "checkpoints": [

@@ -42,9 +42,9 @@ const PixelTextures = (() => {
         meridiani: {   // Meridiani Planum: muted ochre plains, pale sediment bands
             rock: [0x4a3624, 0x7a5a3a, 0xa8814f, 0xc9a46c, 0xe0c899],
             soil: [0x8a6a44, 0xa8814f, 0xb8925a, 0xc9a46c],
-            sky: [0xa8774a, 0xc9a06a, 0xd9b484, 0xe8caa0],
-            ridge: [0x8f6a45, 0x9f7a52],
-            rim: [0x7d5c3a, 0x8e6b47],
+            sky: [0x7a2416, 0x9e3320, 0xc0482a, 0xdb6a3c],     // clearly red Martian sky (pre-storm)
+            ridge: [0x6e2718, 0x823221],
+            rim: [0x8a3a22, 0x9c472a],
             pit: [0x2b1d12, 0x3d2a1a],
         },
     };
@@ -113,9 +113,9 @@ const PixelTextures = (() => {
         const w = Math.max(3, Math.round(wPx / P)), h = Math.max(2, Math.round(hPx / P));
         const pal = THEMES[theme].rock;
         return bake(scene, key, w + 2, h + 1, ({ px, rect }) => {
-            rect(1, h, w, 1, 0x2a1c14);
+            rect(0, h, w + 2, 1, 0x140c08);                                   // darker contact shadow
             const mask = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => !(y === 0 && (x === 0 || x === w - 1))));
-            outlined(mask, w, h, (x, y) => (x < w / 2 && y < h / 2 ? pal[3] : pal[1 + ((x + variant) % 2)]), (x, y, c) => px(x + 1, y, c));
+            outlined(mask, w, h, (x, y) => (x < w / 2 && y < h / 2 ? 0xf2e6d4 : (y >= h - 2 ? pal[1] : pal[3])), (x, y, c) => px(x + 1, y, c));
         });
     }
 
@@ -214,8 +214,8 @@ const PixelTextures = (() => {
     function puff(scene, kind) {
         const key = `${VERSION}:fx:puff:${kind}`;
         const C = {
-            magnetic: [0x5a4a5c, 0x7d6b80, 0x9a88a0],     // dark violet-grey magnetic dust
-            plume: [0x8a6a44, 0xa8814f, 0xc9a46c],        // ochre dust plume
+            magnetic: [0x1f0a26, 0x7a3c9c, 0xc58ae6],     // DAMAGING magnetic dust: violet, dark outline
+            plume: [0x1a0a04, 0x5a2410, 0x9a4a22],        // DAMAGING dust plume: dark rust, dark outline
             smoke: [0x2a2626, 0x4a4444, 0x6a6262],        // damage smoke
             airbag: [0xb8bcc4, 0xe8ecf0, 0xffffff],       // cosmetic airbag lobe
             gust: [0x9fe8ff, 0xd8f6ff, 0xffffff],         // beneficial wind gust (pale cyan)

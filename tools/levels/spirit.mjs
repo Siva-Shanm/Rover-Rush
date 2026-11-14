@@ -56,7 +56,7 @@ export function build() {
         physics: physics({
             cruiseSpeed: 300, gravity: 800, jumpVelocity: 336, jumpHoldAccel: 1400, jumpHoldMaxMs: 300,
             // Spirit-only legacy systems preserved from the baseline (not shared with other rovers)
-            energy: { max: 100, regenPerSec: 2.5, jumpCost: 4, devilDrain: 15, batteryCharge: 40 },
+            energy: { max: 100, regenPerSec: 2.5, jumpCost: 0, devilDrain: 15, batteryCharge: 40 },
             legacyBoost: { keys: 'E or hold SPACE', speedMult: 1.5, drainPerSec: 24, holdSpaceMs: 500 },
         }),
         ability: { id: 'trenchScrapeSlide', params: { energyCost: 15, slideBodyH: 42, fastFall: 1400 } },

@@ -10,38 +10,229 @@
     "merTwins": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
   },
   "entries": [
-    { "id": "soj-t2.note", "original": "", "replacement": "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump.", "reason": "Airbags belonged to the Pathfinder landing system; Sojourner carried no jumping airbags (PRD-required note).", "source": "pathfinder" },
-    { "id": "soj-f03", "original": "Rolled 1 kilometer from first impact to our resting spot.", "replacement": "Pathfinder bounced and rolled about 1 kilometer from first impact.", "reason": "The ~1 km describes the lander's landing bounce/roll travel, not rover driving.", "source": "pathfinder" },
-    { "id": "soj-f04", "original": "Landing site named Carl Sagan Memorial Station in Ares Vallis.", "replacement": "The lander was named the Carl Sagan Memorial Station, in Ares Vallis.", "reason": "NASA: 'The lander, named the Carl Sagan Memorial Station'.", "source": "pathfinder" },
-    { "id": "soj-f07", "original": "Found rounded pebbles, proving flowing water existed in Mars' past.", "replacement": "Found rounded pebbles, suggesting flowing water existed in Mars' past.", "reason": "NASA: rounded pebbles 'suggested' conglomerates formed in running water; not proof.", "source": "pathfinder" },
-    { "id": "soj-f08", "original": "Discovered that airborne Martian dust is actually magnetic!", "replacement": "The Pathfinder mission found that airborne Martian dust is magnetic!", "reason": "Magnetic dust is a Pathfinder mission result, not solely Sojourner's.", "source": "pathfinder" },
-    { "id": "soj-f09", "original": "Observed early-morning clouds made of water ice in the sky.", "replacement": "The Pathfinder mission observed early-morning water ice clouds in the sky.", "reason": "Atmospheric cloud observations are a Pathfinder mission result.", "source": "pathfinder" },
-    { "id": "soj-f10", "original": "Sent 2.3 billion bits of data before concluding Sept. 27, 1997.", "replacement": "Pathfinder mission sent 2.3 billion bits before final contact Sept. 27, 1997.", "reason": "The 2.3 billion bits were returned by the whole Pathfinder mission (lander and rover).", "source": "pathfinder" },
-    { "id": "soj-cp3", "original": "SYSTEM LOG 03: My sensors are rewriting planetary science! I've spotted rounded pebbles that prove water once flowed across a warmer Mars. Plus, I discovered the airborne dust is magnetic and spotted early-morning water ice clouds!", "replacement": "SYSTEM LOG 03: My sensors are rewriting planetary science! I've spotted rounded pebbles that suggest water once flowed across a warmer Mars. Plus, our Pathfinder mission discovered the airborne dust is magnetic and spotted early-morning water ice clouds!", "reason": "'prove' → 'suggest'; magnetic dust and clouds attributed to the Pathfinder mission.", "source": "pathfinder" },
-    { "id": "soj-cx-profile", "original": "Launched on December 4, 1996, Mars Pathfinder and its rover, Sojourner, landed on July 4, 1997, in Ares Vallis—a rocky, ancient flood plain in Mars' northern hemisphere. The resting spot was named the Carl Sagan Memorial Station.", "replacement": "Launched on December 4, 1996, Mars Pathfinder and its rover, Sojourner, landed on July 4, 1997, in Ares Vallis—a rocky, ancient flood plain in Mars' northern hemisphere. The lander was named the Carl Sagan Memorial Station.", "reason": "NASA names the lander (not the resting spot) the Carl Sagan Memorial Station.", "source": "pathfinder" },
-    { "id": "soj-cx-discoveries", "original": "Sojourner's analysis of rounded pebbles suggested that flowing liquid water existed during a warmer period in Mars' past. The mission also discovered that airborne Martian dust has magnetic properties and observed early-morning clouds composed of water ice.", "replacement": "The mission's observations of rounded pebbles suggested that flowing liquid water existed during a warmer period in Mars' past. The mission also discovered that airborne Martian dust has magnetic properties and observed early-morning clouds composed of water ice.", "reason": "The rounded-pebble result came from mission observations (lander imaging and rover), not solely Sojourner's analysis.", "source": "pathfinder" },
-    { "id": "soj-cx.note.distance", "original": "", "replacement": "The 2.3 billion bits and the roughly 1 kilometer of bounce-and-roll travel belong to the whole Pathfinder mission (lander and rover); Sojourner itself drove about 100 meters.", "reason": "Disambiguates mission vs rover totals. Sojourner covered about 330 feet (100 meters).", "source": "perseveranceRecord" },
-    { "id": "soj-cx.note.arcade", "original": "", "replacement": "Magnetic-dust power drain, hopping and the airbag bounce are arcade abstractions, not literal rover capabilities.", "reason": "PRD: label arcade abstractions.", "source": "pathfinder" },
-
-    { "id": "spi-f08", "original": "Confirmed water was long standing on the surface in ancient times.", "replacement": "Found evidence that water was long standing on ancient Mars.", "reason": "Spirit-specific science claims use 'found evidence'; NASA: Spirit 'uncovered strong evidence that Mars was once much wetter'.", "source": "spirit" },
-    { "id": "spi-f10", "original": "Mission concluded in 2010 after rewriting our understanding of Mars.", "replacement": "Last contact: March 2010. Mission formally ended in May 2011.", "reason": "Final contact March 22, 2010; NASA declared the mission complete May 25, 2011.", "source": "spirit" },
-    { "id": "spi-cp3", "original": "SYSTEM LOG 03: My journey is yielding incredible results. By studying the rock record across these 4.8 miles (7.7 kilometers), I've confirmed that water was long standing on the surface of Mars in ancient times. We are rewriting history!", "replacement": "SYSTEM LOG 03: My journey is yielding incredible results. By studying the rock record across these 4.8 miles (7.7 kilometers), I've found evidence that water was long standing on the surface of Mars in ancient times. We are rewriting history!", "reason": "Spirit-specific claim: 'confirmed' → 'found evidence'.", "source": "spirit" },
-    { "id": "spi-cx-profile", "original": "NASA’s Spirit rover was one half of an identical twin robot pair (alongside Opportunity) sent to rewrite our understanding of the early history of Mars. It landed on January 3, 2004, at Gusev Crater, a possible former lake inside a giant impact crater. Its landing site was named the Columbia Memorial Station.", "replacement": "NASA’s Spirit rover was one half of an identical twin robot pair (alongside Opportunity) sent to rewrite our understanding of the early history of Mars. It landed on January 3, 2004 (PST; January 4 UTC), at Gusev Crater, a possible former lake inside a giant impact crater. Its landing site was named the Columbia Memorial Station.", "reason": "Label the PST date convention (landing at 20:35 PST Jan. 3 = Jan. 4 UTC).", "source": "spirit" },
-    { "id": "spi-cx-journey", "original": "Spirit's early traverse included traveling 250 meters northeast to a large 200-meter-wide crater, before heading toward the east hills located about 3 kilometers away from the lander. By the time its mission concluded in 2010, Spirit had journeyed a total of 4.8 miles (7.7 kilometers) across the Martian surface.", "replacement": "Spirit's early traverse included traveling 250 meters northeast to a large 200-meter-wide crater, before heading toward the east hills located about 3 kilometers away from the lander. By its last contact in March 2010, Spirit had journeyed a total of 4.8 miles (7.7 kilometers) across the Martian surface. NASA formally ended the mission in May 2011.", "reason": "Mission did not conclude in 2010: last contact March 2010, formally ended May 25, 2011. Rounded 4.8 mi / 7.7 km kept.", "source": "spirit" },
-    { "id": "spi-cx-discoveries", "original": "Spirit's primary objective was to look for signs of past water. By studying the Martian rock record, Spirit successfully confirmed that water was long standing on the surface of Mars in ancient times.", "replacement": "Spirit's primary objective was to look for signs of past water. By studying the Martian rock record, Spirit found evidence that water was long standing on the surface of Mars in ancient times.", "reason": "Spirit-specific claim: 'confirmed' → 'found evidence'.", "source": "spirit" },
-    { "id": "spi-cx.note.time", "original": "", "replacement": "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.", "reason": "PRD: label the PST convention in the Codex.", "source": "spirit" },
-    { "id": "spi-cx.note.arcade", "original": "", "replacement": "Jumping, the Trench-Scrape Slide, boosting and dust-devil damage are arcade abstractions. The slide is inspired by Spirit's jammed wheel scraping the soil.", "reason": "PRD: label arcade abstractions. NASA: the inactive wheel scraped off the upper soil layer.", "source": "spirit" },
-
-    { "id": "opp-t2.note", "original": "", "replacement": "Local Martian winds cleaned Opportunity's panels. The boost itself is an arcade ability, not a real rover capability.", "reason": "PRD: explain wind cleaning; boost is an arcade abstraction.", "source": "opportunity" },
-    { "id": "opp-t3", "original": "Mineral outcrop ahead! Jump [SPACE] or Boost [SHIFT] to clear the ridge.", "replacement": "Jump onto outcrops; combine [SPACE] and [SHIFT] across wide gaps.", "reason": "PRD-required: a horizontal boost cannot lift a rover over a vertical wall.", "source": "opportunity" },
-    { "id": "opp-t4", "original": "Warning: Planet-wide dust storm ahead! Use Solar Boost to maintain power!", "replacement": "Storm blocks sunlight! Boost across gaps; reach the final archive.", "reason": "PRD-required: storm tutorial replaced; boost does not restore power or change the ending.", "source": "opportunity" },
-    { "id": "opp-q2", "original": "What event caused Opportunity to lose power and send its final communication on June 10, 2018?", "replacement": "What event accompanied Opportunity's final communication on June 10, 2018?", "reason": "Avoid claiming a uniquely diagnosed failure; NASA: contact stopped after a Mars-wide dust storm blanketed its location.", "source": "opportunity" },
-    { "id": "opp-q2-c", "original": "A planet-wide dust storm blanketing its solar panels", "replacement": "A planet-wide dust storm blocking sunlight needed for solar power.", "reason": "PRD-required: describe atmospheric dust blocking sunlight, not a confirmed panel coating.", "source": "opportunity" },
-    { "id": "opp-cx-profile", "original": "NASA’s Opportunity rover was the identical twin to Spirit, landing on the opposite side of Mars on January 24, 2004, at Meridiani Planum—a site targeted because its mineral deposits suggested a wet Martian history. Like Spirit, its primary objective was to search for signs of past water.", "replacement": "NASA’s Opportunity rover was the identical twin to Spirit, landing on the opposite side of Mars on January 24, 2004 (PST; January 25 UTC), at Meridiani Planum—a site targeted because its mineral deposits suggested a wet Martian history. Like Spirit, its primary objective was to search for signs of past water.", "reason": "Label the PST convention (touchdown 21:05 PST = 04:54 UTC Jan. 25).", "source": "opportunity" },
-    { "id": "opp-cx-record", "original": "Aided by Martian winds that periodically cleaned dust off its solar panels (documented in a March 2014 self-portrait), Opportunity far outlived its original mission. By the time it fell silent, Opportunity had accrued 28.06 miles (45.16 kilometers) of driving—holding the off-Earth roving distance record for over eight years until NASA's Perseverance rover passed the mark on October 11, 2026.", "replacement": "Aided by Martian winds that periodically cleaned dust off its solar panels (documented in a March 2014 self-portrait), Opportunity far outlived its original mission. By the time it fell silent, Opportunity had accrued 28.06 miles (45.16 kilometers) of driving. Opportunity set an off-world driving record; Perseverance surpassed its final distance on October 11, 2026.", "reason": "Do not claim a precise record tenure beginning in 2018 (Opportunity already held records before 2018). PRD-specified sentence.", "source": "perseveranceRecord" },
-    { "id": "opp-cx-final", "original": "By studying the Martian rock record, Opportunity and Spirit confirmed that liquid water was long standing on the surface of Mars in ancient times. Opportunity last communicated with Earth on June 10, 2018, when a planet-wide dust storm blanketed its solar panels and cut off its power.", "replacement": "By studying the Martian rock record, Opportunity and Spirit confirmed that liquid water was long standing on the surface of Mars in ancient times. Opportunity last communicated with Earth on June 10, 2018, as a planet-wide dust storm blocked the sunlight its solar panels needed. NASA declared the mission ended on February 13, 2019.", "reason": "Describe dust blocking sunlight, not a confirmed sole cause; add the Feb. 13, 2019 end of mission.", "source": "opportunity" },
-    { "id": "opp-cx.note.time", "original": "", "replacement": "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.", "reason": "PRD: label the PST convention.", "source": "opportunity" },
-    { "id": "opp-cx.note.wind", "original": "", "replacement": "\"Solar Wind Boost\" is the game ability's name. Local Martian atmospheric winds cleaned Opportunity's panels; the solar wind (particles streaming from the Sun) was not the cleaning mechanism.", "reason": "PRD-required explanation of the ability name.", "source": "opportunity" },
-    { "id": "opp-cx.note.arcade", "original": "", "replacement": "Boost propulsion, jumping and the storm's visuals are arcade abstractions. Course distance is compressed narrative scale, not the real 45.16 km.", "reason": "PRD: label arcade abstractions and narrative distance scale.", "source": "opportunity" }
+    {
+      "id": "soj-t2.note",
+      "original": "",
+      "replacement": "Arcade ability inspired by Pathfinder’s landing airbags; Sojourner did not jump.",
+      "reason": "Airbags belonged to the Pathfinder landing system; Sojourner carried no jumping airbags (PRD-required note).",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-t2",
+      "original": "Tall obstacle ahead! Press [SHIFT] to deploy Airbags and bounce high!",
+      "replacement": "Press SPACE to jump, then press SHIFT while airborne to deploy your airbags and double jump.",
+      "reason": "Round 2: teach the airborne SPACE-then-SHIFT airbag sequence (grounded bounce still works).",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-f03",
+      "original": "Rolled 1 kilometer from first impact to our resting spot.",
+      "replacement": "Pathfinder bounced and rolled about 1 kilometer from first impact.",
+      "reason": "The ~1 km describes the lander's landing bounce/roll travel, not rover driving.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-f04",
+      "original": "Landing site named Carl Sagan Memorial Station in Ares Vallis.",
+      "replacement": "The lander was named the Carl Sagan Memorial Station, in Ares Vallis.",
+      "reason": "NASA: 'The lander, named the Carl Sagan Memorial Station'.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-f07",
+      "original": "Found rounded pebbles, proving flowing water existed in Mars' past.",
+      "replacement": "Found rounded pebbles, suggesting flowing water existed in Mars' past.",
+      "reason": "NASA: rounded pebbles 'suggested' conglomerates formed in running water; not proof.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-f08",
+      "original": "Discovered that airborne Martian dust is actually magnetic!",
+      "replacement": "The Pathfinder mission found that airborne Martian dust is magnetic!",
+      "reason": "Magnetic dust is a Pathfinder mission result, not solely Sojourner's.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-f09",
+      "original": "Observed early-morning clouds made of water ice in the sky.",
+      "replacement": "The Pathfinder mission observed early-morning water ice clouds in the sky.",
+      "reason": "Atmospheric cloud observations are a Pathfinder mission result.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-f10",
+      "original": "Sent 2.3 billion bits of data before concluding Sept. 27, 1997.",
+      "replacement": "Pathfinder mission sent 2.3 billion bits before final contact Sept. 27, 1997.",
+      "reason": "The 2.3 billion bits were returned by the whole Pathfinder mission (lander and rover).",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-cp3",
+      "original": "SYSTEM LOG 03: My sensors are rewriting planetary science! I've spotted rounded pebbles that prove water once flowed across a warmer Mars. Plus, I discovered the airborne dust is magnetic and spotted early-morning water ice clouds!",
+      "replacement": "SYSTEM LOG 03: My sensors are rewriting planetary science! I've spotted rounded pebbles that suggest water once flowed across a warmer Mars. Plus, our Pathfinder mission discovered the airborne dust is magnetic and spotted early-morning water ice clouds!",
+      "reason": "'prove' → 'suggest'; magnetic dust and clouds attributed to the Pathfinder mission.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-cx-profile",
+      "original": "Launched on December 4, 1996, Mars Pathfinder and its rover, Sojourner, landed on July 4, 1997, in Ares Vallis—a rocky, ancient flood plain in Mars' northern hemisphere. The resting spot was named the Carl Sagan Memorial Station.",
+      "replacement": "Launched on December 4, 1996, Mars Pathfinder and its rover, Sojourner, landed on July 4, 1997, in Ares Vallis—a rocky, ancient flood plain in Mars' northern hemisphere. The lander was named the Carl Sagan Memorial Station.",
+      "reason": "NASA names the lander (not the resting spot) the Carl Sagan Memorial Station.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-cx-discoveries",
+      "original": "Sojourner's analysis of rounded pebbles suggested that flowing liquid water existed during a warmer period in Mars' past. The mission also discovered that airborne Martian dust has magnetic properties and observed early-morning clouds composed of water ice.",
+      "replacement": "The mission's observations of rounded pebbles suggested that flowing liquid water existed during a warmer period in Mars' past. The mission also discovered that airborne Martian dust has magnetic properties and observed early-morning clouds composed of water ice.",
+      "reason": "The rounded-pebble result came from mission observations (lander imaging and rover), not solely Sojourner's analysis.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "soj-cx.note.distance",
+      "original": "",
+      "replacement": "The 2.3 billion bits and the roughly 1 kilometer of bounce-and-roll travel belong to the whole Pathfinder mission (lander and rover); Sojourner itself drove about 100 meters.",
+      "reason": "Disambiguates mission vs rover totals. Sojourner covered about 330 feet (100 meters).",
+      "source": "perseveranceRecord"
+    },
+    {
+      "id": "soj-cx.note.arcade",
+      "original": "",
+      "replacement": "Magnetic-dust power drain, hopping and the airbag bounce are arcade abstractions, not literal rover capabilities.",
+      "reason": "PRD: label arcade abstractions.",
+      "source": "pathfinder"
+    },
+    {
+      "id": "spi-f08",
+      "original": "Confirmed water was long standing on the surface in ancient times.",
+      "replacement": "Found evidence that water was long standing on ancient Mars.",
+      "reason": "Spirit-specific science claims use 'found evidence'; NASA: Spirit 'uncovered strong evidence that Mars was once much wetter'.",
+      "source": "spirit"
+    },
+    {
+      "id": "spi-f10",
+      "original": "Mission concluded in 2010 after rewriting our understanding of Mars.",
+      "replacement": "Last contact: March 2010. Mission formally ended in May 2011.",
+      "reason": "Final contact March 22, 2010; NASA declared the mission complete May 25, 2011.",
+      "source": "spirit"
+    },
+    {
+      "id": "spi-cp3",
+      "original": "SYSTEM LOG 03: My journey is yielding incredible results. By studying the rock record across these 4.8 miles (7.7 kilometers), I've confirmed that water was long standing on the surface of Mars in ancient times. We are rewriting history!",
+      "replacement": "SYSTEM LOG 03: My journey is yielding incredible results. By studying the rock record across these 4.8 miles (7.7 kilometers), I've found evidence that water was long standing on the surface of Mars in ancient times. We are rewriting history!",
+      "reason": "Spirit-specific claim: 'confirmed' → 'found evidence'.",
+      "source": "spirit"
+    },
+    {
+      "id": "spi-cx-profile",
+      "original": "NASA’s Spirit rover was one half of an identical twin robot pair (alongside Opportunity) sent to rewrite our understanding of the early history of Mars. It landed on January 3, 2004, at Gusev Crater, a possible former lake inside a giant impact crater. Its landing site was named the Columbia Memorial Station.",
+      "replacement": "NASA’s Spirit rover was one half of an identical twin robot pair (alongside Opportunity) sent to rewrite our understanding of the early history of Mars. It landed on January 3, 2004 (PST; January 4 UTC), at Gusev Crater, a possible former lake inside a giant impact crater. Its landing site was named the Columbia Memorial Station.",
+      "reason": "Label the PST date convention (landing at 20:35 PST Jan. 3 = Jan. 4 UTC).",
+      "source": "spirit"
+    },
+    {
+      "id": "spi-cx-journey",
+      "original": "Spirit's early traverse included traveling 250 meters northeast to a large 200-meter-wide crater, before heading toward the east hills located about 3 kilometers away from the lander. By the time its mission concluded in 2010, Spirit had journeyed a total of 4.8 miles (7.7 kilometers) across the Martian surface.",
+      "replacement": "Spirit's early traverse included traveling 250 meters northeast to a large 200-meter-wide crater, before heading toward the east hills located about 3 kilometers away from the lander. By its last contact in March 2010, Spirit had journeyed a total of 4.8 miles (7.7 kilometers) across the Martian surface. NASA formally ended the mission in May 2011.",
+      "reason": "Mission did not conclude in 2010: last contact March 2010, formally ended May 25, 2011. Rounded 4.8 mi / 7.7 km kept.",
+      "source": "spirit"
+    },
+    {
+      "id": "spi-cx-discoveries",
+      "original": "Spirit's primary objective was to look for signs of past water. By studying the Martian rock record, Spirit successfully confirmed that water was long standing on the surface of Mars in ancient times.",
+      "replacement": "Spirit's primary objective was to look for signs of past water. By studying the Martian rock record, Spirit found evidence that water was long standing on the surface of Mars in ancient times.",
+      "reason": "Spirit-specific claim: 'confirmed' → 'found evidence'.",
+      "source": "spirit"
+    },
+    {
+      "id": "spi-cx.note.time",
+      "original": "",
+      "replacement": "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.",
+      "reason": "PRD: label the PST convention in the Codex.",
+      "source": "spirit"
+    },
+    {
+      "id": "spi-cx.note.arcade",
+      "original": "",
+      "replacement": "Jumping, the Trench-Scrape Slide, boosting and dust-devil damage are arcade abstractions. The slide is inspired by Spirit's jammed wheel scraping the soil.",
+      "reason": "PRD: label arcade abstractions. NASA: the inactive wheel scraped off the upper soil layer.",
+      "source": "spirit"
+    },
+    {
+      "id": "opp-t2.note",
+      "original": "",
+      "replacement": "Local Martian winds cleaned Opportunity's panels. The boost itself is an arcade ability, not a real rover capability.",
+      "reason": "PRD: explain wind cleaning; boost is an arcade abstraction.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-t3",
+      "original": "Mineral outcrop ahead! Jump [SPACE] or Boost [SHIFT] to clear the ridge.",
+      "replacement": "Jump onto outcrops; combine [SPACE] and [SHIFT] across wide gaps.",
+      "reason": "PRD-required: a horizontal boost cannot lift a rover over a vertical wall.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-t4",
+      "original": "Warning: Planet-wide dust storm ahead! Use Solar Boost to maintain power!",
+      "replacement": "Storm blocks sunlight! Boost across gaps; reach the final archive.",
+      "reason": "PRD-required: storm tutorial replaced; boost does not restore power or change the ending.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-q2",
+      "original": "What event caused Opportunity to lose power and send its final communication on June 10, 2018?",
+      "replacement": "What event accompanied Opportunity's final communication on June 10, 2018?",
+      "reason": "Avoid claiming a uniquely diagnosed failure; NASA: contact stopped after a Mars-wide dust storm blanketed its location.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-q2-c",
+      "original": "A planet-wide dust storm blanketing its solar panels",
+      "replacement": "A planet-wide dust storm blocking sunlight needed for solar power.",
+      "reason": "PRD-required: describe atmospheric dust blocking sunlight, not a confirmed panel coating.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-cx-profile",
+      "original": "NASA’s Opportunity rover was the identical twin to Spirit, landing on the opposite side of Mars on January 24, 2004, at Meridiani Planum—a site targeted because its mineral deposits suggested a wet Martian history. Like Spirit, its primary objective was to search for signs of past water.",
+      "replacement": "NASA’s Opportunity rover was the identical twin to Spirit, landing on the opposite side of Mars on January 24, 2004 (PST; January 25 UTC), at Meridiani Planum—a site targeted because its mineral deposits suggested a wet Martian history. Like Spirit, its primary objective was to search for signs of past water.",
+      "reason": "Label the PST convention (touchdown 21:05 PST = 04:54 UTC Jan. 25).",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-cx-record",
+      "original": "Aided by Martian winds that periodically cleaned dust off its solar panels (documented in a March 2014 self-portrait), Opportunity far outlived its original mission. By the time it fell silent, Opportunity had accrued 28.06 miles (45.16 kilometers) of driving—holding the off-Earth roving distance record for over eight years until NASA's Perseverance rover passed the mark on October 11, 2026.",
+      "replacement": "Aided by Martian winds that periodically cleaned dust off its solar panels (documented in a March 2014 self-portrait), Opportunity far outlived its original mission. By the time it fell silent, Opportunity had accrued 28.06 miles (45.16 kilometers) of driving. Opportunity set an off-world driving record; Perseverance surpassed its final distance on October 11, 2026.",
+      "reason": "Do not claim a precise record tenure beginning in 2018 (Opportunity already held records before 2018). PRD-specified sentence.",
+      "source": "perseveranceRecord"
+    },
+    {
+      "id": "opp-cx-final",
+      "original": "By studying the Martian rock record, Opportunity and Spirit confirmed that liquid water was long standing on the surface of Mars in ancient times. Opportunity last communicated with Earth on June 10, 2018, when a planet-wide dust storm blanketed its solar panels and cut off its power.",
+      "replacement": "By studying the Martian rock record, Opportunity and Spirit confirmed that liquid water was long standing on the surface of Mars in ancient times. Opportunity last communicated with Earth on June 10, 2018, as a planet-wide dust storm blocked the sunlight its solar panels needed. NASA declared the mission ended on February 13, 2019.",
+      "reason": "Describe dust blocking sunlight, not a confirmed sole cause; add the Feb. 13, 2019 end of mission.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-cx.note.time",
+      "original": "",
+      "replacement": "Landing dates use Pacific Standard Time (PST), following NASA's mission pages; the UTC date was one day later.",
+      "reason": "PRD: label the PST convention.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-cx.note.wind",
+      "original": "",
+      "replacement": "\"Solar Wind Boost\" is the game ability's name. Local Martian atmospheric winds cleaned Opportunity's panels; the solar wind (particles streaming from the Sun) was not the cleaning mechanism.",
+      "reason": "PRD-required explanation of the ability name.",
+      "source": "opportunity"
+    },
+    {
+      "id": "opp-cx.note.arcade",
+      "original": "",
+      "replacement": "Boost propulsion, jumping and the storm's visuals are arcade abstractions. Course distance is compressed narrative scale, not the real 45.16 km.",
+      "reason": "PRD: label arcade abstractions and narrative distance scale.",
+      "source": "opportunity"
+    }
   ]
 }

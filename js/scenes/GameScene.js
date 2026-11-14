@@ -42,6 +42,8 @@ class GameScene extends Phaser.Scene {
         this.playMs = 0;                  // active-play clock for personal bests
         this.timing = false;
         this.finishRecorded = false;
+        this.pausedByUser = false;
+        this.lowPowerUntil = 0;
         this.hudTimer = 0;
     }
 
@@ -75,6 +77,7 @@ class GameScene extends Phaser.Scene {
         this.tutorials = level.tutorials.map((t) => ({ ...t, state: 'pending' }));
         this.checkpoints = level.checkpoints.map((c) => ({ ...c, done: false }));
         this.storm = level.storm ? this.buildStorm(level.storm) : null;
+        if (this.storm) this.ambient.emitting = false;   // no decorative storm specks before the storm trigger
 
         this.events.on('postupdate', this.updateCamera, this);
         this.events.once('shutdown', this.cleanup, this);
@@ -221,7 +224,7 @@ class GameScene extends Phaser.Scene {
 
     buildInput() {
         const K = Phaser.Input.Keyboard.KeyCodes;
-        this.keys = this.input.keyboard.addKeys({ space: K.SPACE, up: K.UP, w: K.W, shift: K.SHIFT, down: K.DOWN, s: K.S, e: K.E, enter: K.ENTER, esc: K.ESC });
+        this.keys = this.input.keyboard.addKeys({ space: K.SPACE, up: K.UP, w: K.W, shift: K.SHIFT, down: K.DOWN, s: K.S, e: K.E, enter: K.ENTER, esc: K.ESC, x: K.X });
         this.input.keyboard.addCapture([K.SPACE, K.SHIFT, K.UP, K.DOWN]);
         this.onBlur = () => this.input.keyboard.resetKeys();
         window.addEventListener('blur', this.onBlur);
@@ -246,7 +249,10 @@ class GameScene extends Phaser.Scene {
         S.dither.setAlpha(q * 0.45);
         S.dither.tilePositionX += 0.6 + q * 2.4;
         S.dither.tilePositionY -= 0.2;
-        if (S.grade) { S.grade.reset(); S.grade.brightness(1 - 0.25 * q, true); S.grade.sepia(true); S.grade.saturate(-0.3 * q, true); }
+        if (S.grade) { S.grade.reset(); if (q > 0) { S.grade.brightness(1 - 0.25 * q, true); S.grade.saturate(-0.35 * q, true); } }
+        // decorative storm specks (tiny amber, non-damaging) start at the trigger and thicken with q
+        this.ambient.emitting = q > 0;
+        if (q > 0) this.ambient.frequency = Math.max(20, 140 - 120 * q);
         this.stormQ = q;
     }
 
@@ -334,14 +340,37 @@ class GameScene extends Phaser.Scene {
 
     jumpKeyHeld() { return this.keys.space.isDown || this.keys.up.isDown || this.keys.w.isDown; }
 
+    /** Taught action performed: mark it (the box stays until the player confirms with X or the button). */
     tutorialInput(key) {
         const t = this.activeTutorial;
         if (!t || t.accepted) return;
-        if (t.accepts.includes(key)) {
-            t.accepted = true;
-            UI.markTutorialDone();
-            this.after(500, () => this.endTutorial(t));
-        }
+        if (t.accepts.includes(key)) { t.accepted = true; UI.markTutorialDone(); }
+    }
+
+    // ------------------------------------------------------------ pause (button / Esc)
+    pauseGame() {
+        if (this.state !== 'run' || this.pausedByUser) return;
+        this.pausedByUser = true;
+        this.input.keyboard.disableGlobalCapture();
+        this.scene.pause();                      // freezes physics, timers, damage, energy and the clear clock
+        UI.showPause({ onResume: () => this.resumeGame(), onMenu: () => this.abandonToMenu() });
+    }
+
+    resumeGame() {
+        if (!this.pausedByUser) return;
+        UI.close();
+        this.pausedByUser = false;
+        this.input.keyboard.enableGlobalCapture();
+        this.input.keyboard.resetKeys();         // no input leaks from the pause menu
+        this.scene.resume();                     // tutorial overlay / slow motion beneath are untouched
+    }
+
+    /** Abandon: keep best legitimate progress, never record a clear. */
+    abandonToMenu() {
+        SaveStore.recordProgress(this.missionId, this.levelManager.progress(this.rover.x));
+        UI.close();
+        this.pausedByUser = false;
+        this.exitToMenu();
     }
 
     // ------------------------------------------------------------ ability hooks
@@ -394,13 +423,15 @@ class GameScene extends Phaser.Scene {
             if (this.realTime >= this.realTimers[i].at) { const t = this.realTimers.splice(i, 1)[0]; t.fn(); }
         }
         if (this.state === 'intro') {
-            if (Phaser.Input.Keyboard.JustDown(this.keys.enter) || Phaser.Input.Keyboard.JustDown(this.keys.esc)) this.finishIntro();
+            if (Phaser.Input.Keyboard.JustDown(this.keys.enter)) this.finishIntro();
             return;
         }
         if (this.state !== 'run') return;
         // active-play clock: real time incl. slow motion; modal pauses / hidden tab never reach update
         if (this.timing && delta < 250) this.playMs += delta;
 
+        // tutorial confirm: fresh X press only (held/auto-repeat X never dismisses a later box)
+        if (Phaser.Input.Keyboard.JustDown(this.keys.x) && this.activeTutorial && !(this.keys.x.originalEvent && this.keys.x.originalEvent.repeat)) this.endTutorial(this.activeTutorial);
         const dt = dtReal / 1000 / this.physics.world.timeScale;     // game seconds (same scale as physics)
         const dtMs = dt * 1000;
         const r = this.rover, body = r.body;
@@ -540,12 +571,13 @@ class GameScene extends Phaser.Scene {
     checkTutorials() {
         const x = this.rover.x;
         for (const t of this.tutorials) {
-            if (t.state === 'pending' && x >= t.triggerX) {
+            if (t.state === 'pending' && x >= t.triggerX && !this.activeTutorial) {
                 t.state = 'active';
                 this.activeTutorial = t;
+                this.keys.x.reset();                      // a held X from before cannot confirm this box
                 UI.showTutorial(t, () => this.endTutorial(t));
                 this.time_.set('tutorial', 0.25, 400);
-            } else if (t.state === 'active' && x >= t.clearX) this.endTutorial(t);
+            }
         }
     }
 
@@ -554,7 +586,7 @@ class GameScene extends Phaser.Scene {
         t.state = 'done';
         if (this.activeTutorial === t) this.activeTutorial = null;
         UI.hideTutorial();
-        this.time_.clear('tutorial', 400);
+        this.time_.clear('tutorial', 0);          // immediately drop only the tutorial's slow motion
     }
 
     // ------------------------------------------------------------ hazards
@@ -731,6 +763,8 @@ class GameScene extends Phaser.Scene {
         this.setBodyHeight(null);
         this.tutorials.forEach((t) => { if (t.triggerX < this.respawnX || t.state === 'active') t.state = 'done'; });
         this.activeTutorial = null;
+        UI.hideTutorial();
+        this.time_.reset();
         const top = this.levelManager.groundTopAt(this.respawnX) ?? this.W.groundY;
         this.rover.body.reset(this.respawnX, this.yForFoot(top));
         this.airborneMs = 0;

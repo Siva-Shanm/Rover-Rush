@@ -190,8 +190,8 @@ class LevelManager {
                 const em = s.add.particles(0, 0, key, {
                     x: { min: -h.w / 2, max: h.w / 2 }, y: { min: 0, max: h.y1 - h.y0 - 8 },
                     speedX: { min: -14, max: 14 }, speedY: { min: -18, max: 6 },
-                    lifespan: { min: 700, max: 1300 }, scale: { start: 1, end: 0.6 }, alpha: { start: 0.9, end: 0 },
-                    frequency: 45, quantity: 1, maxParticles: 36,
+                    lifespan: { min: 700, max: 1300 }, scale: { start: 1.25, end: 0.8 }, alpha: { start: 1, end: 0.15 },
+                    frequency: 28, quantity: 1, maxParticles: 56,
                 }).setDepth(8);
                 s.emitters.push(em);
                 this.clouds.push({ h, em, cx: h.x + h.w / 2, rect: new Phaser.Geom.Rectangle(), lastTick: -Infinity });
