@@ -10,7 +10,7 @@ Working handoff for the three-mission upgrade (Sojourner, Spirit V2, Opportunity
 
 | Field | Value |
 | --- | --- |
-| Last updated | 2026-11-14, M3 in progress: core modules + GameScene written; wiring (Boot/UI/index/main) not done, **game not runnable at this commit** |
+| Last updated | 2026-11-14, M3–M6 playable: all 3 missions complete end-to-end in browser autopilot runs; acceptance suite (M8) next |
 | PRD | Not in the checkout. It was attached to the session as `Rover_Rush_-_Final_Claude_Code_Master_Upgrade_Prompt.md`. **Re-attach it when resuming.** |
 | Branch | `claude/clever-galileo-t5dz1n` (pushed to origin; `main` receives merges on request) |
 | Starting commit | `b15ac95` (merge of `origin/main`: new scripts and Sojourner art) |
@@ -67,11 +67,11 @@ Supporting test tooling (not in repo): Playwright + Chromium are preinstalled in
 - [x] M0: Inventory, baseline, handoff (this file)
 - [x] M1: Sojourner art extraction: frame/clip manifest from sheet + video (in-game playback check pending → M5)
 - [x] M2: Content: corrected per-mission JSON, correction ledger, menu facts, validator (V1 runtime-text check fails until M4 replaces `js/ContentDatabase.js`, which is expected)
-- [ ] M3: Shared runtime: LevelManager, level JSON schema, ability registry, time coordinator, save v2 and migration, procedural texture factory
-- [ ] M4: Spirit V2 on the new runtime (layout/tuning unchanged) + regression checks
-- [ ] M5: Sojourner level: Airbag Bounce, intro reenactment, boulders/channel, reachability sim
-- [ ] M6: Opportunity level: Solar Wind Boost, Eagle/Endurance/storm layout, gusts
-- [ ] M7: Menu: rover cards, facts, loader, personal bests
+- [x] M3: Shared runtime: LevelManager, level JSON schema, ability registry, time coordinator, save v2 and migration, procedural texture factory
+- [x] M4: Spirit V2 on the new runtime (layout/tuning unchanged) + regression checks
+- [x] M5: Sojourner level: Airbag Bounce, intro reenactment, boulders/channel, reachability sim
+- [x] M6: Opportunity level: Solar Wind Boost, Eagle/Endurance/storm layout, gusts
+- [x] M7: Menu: rover cards, facts, loader, personal bests
 - [ ] M8: Integration: acceptance checks, browser playthroughs, report
 
 ## Sojourner frame map (M1)
@@ -120,24 +120,32 @@ Tuning decisions:
 
 ## Next action
 
-Wire the runtime. Each step below is still to do:
-1. `index.html`: add script tags for `js/data/GameData.js` and `js/core/*.js` before the scenes.
-2. `js/scenes/BootScene.js`: load the `sojourner` spritesheet, `level:<id>` JSON for all three missions, and loader progress → `UI.setLoadProgress`. Use the anim keys `fragment-spin` and `devil-spin`.
-3. `js/main.js`: `window.RoverRush = { openMenu, startMission(id) }`. Show the menu immediately; start the Phaser game, run BootScene, then enable the cards.
-4. `js/UIController.js`: add the methods GameScene calls:
-   - `showMenu` cards: progress / fastest / codex / fact with source, plus retry.
-   - `showIntro(label, onSkip)`, `hideIntro`, `configureHUD`.
-   - `updateHUD` with an ability pill and timer.
-   - `showTutorial(t, onContinue)` with note + Continue button.
-   - `showFragment(def, total)`, `showCheckpoint(cp, onConfirm)`.
-   - `showQuiz(level, {clearMs, fastestMs, onDecrypted, onComplete})` with explanations + retry.
-   - `showCodex(levelOrId)`, `showGameOver`, `showFatal`, `flashEnergy`.
-5. `js/ContentDatabase.js`: strip all V1 mission text and keep only UI chrome.
-6. `vercel.json`: the build already copies `assets` (levels) and `js` (core/data); nothing more needed.
+M8 acceptance suite. Write `<scratchpad>/accept.js` (Playwright) covering:
+- Spirit boost speed/duration measurement vs Opportunity boost; Spirit headroom slide exit.
+- Sojourner: charge, SPACE+SHIFT, landing reset; clip playback per state.
+- Opportunity: horizontal-only boost, recharge, one-use gusts.
+- Nested slow motion; checkpoint freeze/resume.
+- Saves: progress cap at 99%, completion, fastest of two clears, migration, quiz skipped.
+- Menu: keyboard navigation, load error + retry. Restart cycles (listener/texture counts). Storm thresholds.
 
-Then run `node tools/check_content.mjs` (V1 check must pass) and the browser bots for each mission (scratchpad `bot.js` needs a `missionId` start).
+Then update the README and the final report.
+
+Bot harness (scratchpad, not in repo):
+- `autopilot.js` is injected into the page. It drives real KeyboardEvents from postupdate.
+- `run_mission.js <scratch> <id>` plays a full mission, answering terminals and the quiz (one deliberate wrong answer).
+- `smoke.js` checks menu → each mission.
 
 ## Commands run / results
+
+- Browser autopilot (`node run_mission.js <scratch> <id>`, Chromium/SwiftShader, `?fx=0`):
+  - Spirit: 3/3 HP, 10/10 fragments, finish 2:02.2 play time, quiz + codex + save OK, 0 console errors.
+  - Sojourner: finish, 10/10 fragments, 13 bounces, 9 hops, two-stage channels crossed. Last run: 1 plume hit, since fixed (plumes lowered → sim margin ≥ 1.18).
+  - Opportunity: 3/3 HP, 10/10 fragments (fragments 7/8 moved onto boosted-landing ground), 3 boosts, all 4 wide gaps crossed.
+- Fixed during M3–M6:
+  - TimeCoordinator crash on scene shutdown, which broke the next mission launch.
+  - Sojourner sheet 15.5k px wide (over the WebGL max texture size) → packed as a 10-column grid.
+  - Ground TileSprites wider than 8192 → 2048 px visual chunks + one Zone body per segment.
+  - Sojourner hop retuned 0.55 → 0.60 J (pebble window 80 → 138 ms).
 
 - `git merge origin/main` → b15ac95 (brought in scripts + Sojourner art). OK.
 - `node tools/build_levels.mjs` → ✓ all 3 levels (schema + sims), Opportunity 1.60× longest.

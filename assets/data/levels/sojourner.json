@@ -171,7 +171,7 @@
   "jumpHoldMaxMs": 0,
   "cruiseSpeed": 240,
   "gravity": 800,
-  "jumpVelocity": 185
+  "jumpVelocity": 202
  },
  "ability": {
   "id": "airbagBounce",
@@ -249,7 +249,7 @@
    "role": "damage",
    "x": 1400,
    "w": 12,
-   "h": 8,
+   "h": 7,
    "variant": 0
   },
   {
@@ -258,7 +258,7 @@
    "role": "damage",
    "x": 1950,
    "w": 12,
-   "h": 8,
+   "h": 7,
    "variant": 1
   },
   {
@@ -267,7 +267,7 @@
    "role": "damage",
    "x": 2400,
    "w": 10,
-   "h": 7,
+   "h": 6,
    "variant": 2
   },
   {
@@ -276,7 +276,7 @@
    "role": "damage",
    "x": 6300,
    "w": 12,
-   "h": 8,
+   "h": 7,
    "variant": 0
   },
   {
@@ -285,7 +285,7 @@
    "role": "damage",
    "x": 9600,
    "w": 12,
-   "h": 8,
+   "h": 7,
    "variant": 1
   },
   {
@@ -294,7 +294,7 @@
    "role": "damage",
    "x": 12900,
    "w": 10,
-   "h": 7,
+   "h": 6,
    "variant": 2
   },
   {
@@ -303,7 +303,7 @@
    "role": "damage",
    "x": 15000,
    "w": 12,
-   "h": 8,
+   "h": 7,
    "variant": 0
   },
   {
@@ -371,8 +371,8 @@
    "type": "magneticDust",
    "role": "damage",
    "x": 5800,
-   "w": 90,
-   "y0": 564,
+   "w": 80,
+   "y0": 572,
    "y1": 620,
    "drift": 24,
    "periodMs": 3000,
@@ -383,8 +383,8 @@
    "type": "magneticDust",
    "role": "damage",
    "x": 6900,
-   "w": 84,
-   "y0": 566,
+   "w": 76,
+   "y0": 574,
    "y1": 620,
    "drift": 24,
    "periodMs": 3000,
@@ -395,8 +395,8 @@
    "type": "magneticDust",
    "role": "damage",
    "x": 12400,
-   "w": 90,
-   "y0": 564,
+   "w": 80,
+   "y0": 572,
    "y1": 620,
    "drift": 24,
    "periodMs": 3000,
@@ -407,8 +407,8 @@
    "type": "magneticDust",
    "role": "damage",
    "x": 16000,
-   "w": 84,
-   "y0": 568,
+   "w": 76,
+   "y0": 574,
    "y1": 620,
    "drift": 24,
    "periodMs": 3000,
@@ -545,7 +545,7 @@
    "text": "Warning: Magnetic dust drains power! Bounce high to evade.",
    "triggerX": 5296,
    "hazardX": 5776,
-   "clearX": 5994
+   "clearX": 5984
   },
   {
    "id": "soj-t4",

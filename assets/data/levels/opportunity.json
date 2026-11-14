@@ -426,7 +426,7 @@
     "id": "opp-f07",
     "n": 7,
     "displayText": "Snapped a March 2014 self-portrait showing freshly wind-cleaned solar panels.",
-    "x": 20000,
+    "x": 18900,
     "y": 550
    },
    {
@@ -434,8 +434,8 @@
     "id": "opp-f08",
     "n": 8,
     "displayText": "Confirmed ancient water was long standing on the Martian surface.",
-    "x": 28400,
-    "y": 470
+    "x": 29500,
+    "y": 550
    },
    {
     "role": "pickup",

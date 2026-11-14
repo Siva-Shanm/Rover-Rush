@@ -4,22 +4,23 @@
  * Tuning (gameplay units relative to Spirit: V = 300 px/s, G = 800 px/s^2, J = 336 px/s):
  *   cruise 0.80 V = 240 px/s (PRD default)
  *   bounce 1.35 J = 454 px/s (PRD default) -> ~129 px apex
- *   hop    0.55 J = 185 px/s (PRD default 0.45 J = 151 px/s gives a 14 px apex; with
- *          the tight 56 px body at 240 px/s that cannot clear any pebble with the
- *          required margin, so the hop was raised to the smallest ratio that does —
- *          ~21 px apex, still far below every tall boulder). Verified by verify().
+ *   hop    0.60 J = 202 px/s (PRD default 0.45 J = 151 px/s gives a 14 px apex; with
+ *          the tight 56 px body at 240 px/s that cannot clear a pebble at all with
+ *          margin. 0.55 J cleared them but left only a ~80 ms timing window, too
+ *          pixel-perfect; 0.60 J gives ~135 ms with 6-7 px pebbles, ~25 px apex,
+ *          still far below every tall boulder). Verified by verify().
  */
 import { GROUND_Y, SPIRIT, sojournerRover, physics, contentFields, codexSources } from './common.mjs';
 import { arc, apex, spanAbove, clears, crosses } from './sim.mjs';
 
 const LENGTH = 18000;
-const PHYS = { cruiseSpeed: Math.round(0.8 * SPIRIT.cruise), gravity: SPIRIT.gravity, jumpVelocity: Math.round(0.55 * SPIRIT.jump), jumpHoldAccel: 0, jumpHoldMaxMs: 0 };
+const PHYS = { cruiseSpeed: Math.round(0.8 * SPIRIT.cruise), gravity: SPIRIT.gravity, jumpVelocity: Math.round(0.60 * SPIRIT.jump), jumpHoldAccel: 0, jumpHoldMaxMs: 0 };
 const ABILITY = { bounceVelocity: Math.round(1.35 * SPIRIT.jump), charges: 1 };
 const BODY_W = 56;
 
-const PEBBLES = [[1400, 12, 8], [1950, 12, 8], [2400, 10, 7], [6300, 12, 8], [9600, 12, 8], [12900, 10, 7], [15000, 12, 8]];
+const PEBBLES = [[1400, 12, 7], [1950, 12, 7], [2400, 10, 6], [6300, 12, 7], [9600, 12, 7], [12900, 10, 6], [15000, 12, 7]];
 const BOULDERS = [[2900, 48, 50], [3600, 56, 64], [7400, 60, 72], [11800, 64, 80], [15400, 52, 56], [16600, 48, 48]];   // x, w, h (all mandatory)
-const DUST = [[5800, 90, 56, 24], [6900, 84, 54, 24], [12400, 90, 56, 24], [16000, 84, 52, 24]];                    // x, w, plume height, drift amplitude
+const DUST = [[5800, 80, 48, 24], [6900, 76, 46, 24], [12400, 80, 48, 24], [16000, 76, 46, 24]];                    // x, w, plume height, drift amplitude
 const CHANNELS = [[8000, 200, 'bounce'], [10600, 340, 'combo'], [14300, 340, 'combo']];                              // x, width, intended route
 const FRAG = { 1: [1700, 30], 2: [3628, 120], 3: [4900, 30], 4: [6560, 30], 5: [7430, 120], 6: [9500, 30], 7: [11200, 30], 8: [12455, 120], 9: [15200, 30], 10: [17200, 30] };
 
@@ -87,7 +88,15 @@ export function verify(level) {
         const r = clears(hop, h.h, h.w, bw);
         if (!(r.margin >= 1.15)) fail.push(`${h.id}: hop margin ${r.margin.toFixed(2)} < 1.15`);
     }
-    out.push(`pebbles: hop clears all ${level.hazards.filter((z) => z.type === 'pebble').length} (min margin ${Math.min(...level.hazards.filter((z) => z.type === 'pebble').map((h) => clears(hop, h.h, h.w, bw).margin)).toFixed(2)})`);
+    const pebbles = level.hazards.filter((z) => z.type === 'pebble');
+    const win = (h) => {   // takeoff window: distance d from body front to pebble that clears it
+        const above = hop.filter((s) => s.h > h.h);
+        const a = above[0].x, b = above[above.length - 1].x;
+        return { lo: a, hi: b - bw - h.w, ms: ((b - bw - h.w) - a) / P.cruiseSpeed * 1000 };
+    };
+    const minWin = Math.min(...pebbles.map((h) => win(h).ms));
+    if (minWin < 120) fail.push(`pebble hop timing window ${minWin.toFixed(0)} ms < 120 ms`);
+    out.push(`pebbles: hop clears all ${pebbles.length} (min margin ${Math.min(...pebbles.map((h) => clears(hop, h.h, h.w, bw).margin)).toFixed(2)}, takeoff window ${win(pebbles[0]).lo.toFixed(0)}–${win(pebbles[0]).hi.toFixed(0)} px before the pebble = ${minWin.toFixed(0)} ms min)`);
     const boulders = level.hazards.filter((z) => z.type === 'boulder');
     for (const h of boulders) {
         if (spanAbove(hop, h.h - 2) > 0) fail.push(`${h.id}: normal hop can clear (h ${h.h})`);
