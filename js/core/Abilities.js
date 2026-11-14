@@ -33,8 +33,7 @@ const Abilities = (() => {
         update(ctx) {
             const s = this.scene;
             if (ctx.shiftDown && !this.sliding) {
-                if (s.energy >= this.p.energyCost) {
-                    s.energy -= this.p.energyCost;
+                if (s.spendEnergy(this.p.energyCost)) {
                     this.sliding = true; this.blocked = false;
                     s.setBodyHeight(this.p.slideBodyH);
                     s.tutorialInput('SHIFT');
@@ -63,6 +62,7 @@ const Abilities = (() => {
         onLanded() { this.charges = this.p.charges; }
         update(ctx) {
             if (!ctx.shiftPressed || this.charges <= 0) return {};
+            if (!this.scene.spendEnergy(this.p.energyCost)) { this.scene.lowPowerFeedback(); return {}; }   // refused: a normal hop may still happen
             this.charges -= 1;                                   // spend before applying: no double fire
             const body = this.scene.rover.body;
             body.setVelocityY(-this.p.bounceVelocity);           // set, never add
@@ -88,6 +88,7 @@ const Abilities = (() => {
                 if (this.left <= 0) { this.state = 'ready'; this.left = 0; }
             }
             if (ctx.shiftPressed && this.state === 'ready') {     // fresh press only; ignored while active
+                if (!this.scene.spendEnergy(this.p.energyCost)) { this.scene.lowPowerFeedback(); return {}; }
                 this.state = 'active';
                 this.left = this.p.durationMs;
                 this.scene.onBoost();
@@ -97,8 +98,10 @@ const Abilities = (() => {
         }
         /** Gust zone entry: readies the next boost once per zone per run. */
         gust(zoneId) {
-            if (this.usedGusts.has(zoneId) || this.state === 'ready') return false;
+            if (this.usedGusts.has(zoneId)) return false;
+            if (this.state === 'ready') { this.usedGusts.add(zoneId); this.scene.gainEnergy('gust'); return true; }
             this.usedGusts.add(zoneId);
+            this.scene.gainEnergy('gust');
             if (this.state === 'active') this.queued = true; else { this.state = 'ready'; this.left = 0; }
             return true;
         }

@@ -1,92 +1,101 @@
-# Rover Rush: Spirit Level
+# Rover Rush
 
-A 2DHD pixel-art runner for the **NASA Space Apps Challenge 2026**. You drive NASA's Spirit rover (MER-A) across Gusev Crater while recovering memory fragments that tell the real story of the mission. Built with Phaser 3.60 (WebGL) and an HTML/CSS UI layer.
+A 2DHD pixel-art runner across three NASA Mars missions, built for the **NASA Space Apps Challenge 2026**. Play as **Sojourner** (Ares Vallis, 1997), **Spirit** (Gusev Crater, 2004) and **Opportunity** (Meridiani Planum, 2004). Each rover has its own signature ability, course, memory fragments, checkpoint logs, decryption quiz and Codex archive. Built with Phaser 3.60 (WebGL) plus an HTML/CSS UI layer.
 
 ## Run it
 
-The game loads images over HTTP, so serve the folder rather than opening the file directly:
+The game loads images and level data over HTTP, so serve the folder rather than opening the file directly:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000>. Add `?fx=0` to the URL to turn off the bloom, glow and vignette effects on low-end GPUs.
+Then open <http://localhost:8000> and pick a rover card. Add `?fx=0` to the URL to turn off bloom, glow and vignette on low-end GPUs.
 
-| Key | Action |
+## Controls
+
+| Key | All rovers |
 | --- | --- |
-| `SPACE` / `↑` / `W` | Jump. A tap is a tight, low hop (~65 px); holding adds lift for up to 300 ms, strictly capped (~265 px) |
-| `SHIFT` / `↓` / `S` | Trench-Scrape Slide (hitbox height ×0.5). Costs a flat 15% battery each time a slide starts and is refused below 15%. Solar recharge pauses while sliding. Fast-fall in the air |
-| `E`, or hold `SPACE` past 0.5 s | Boost: +50% speed, drains energy |
+| `SPACE` / `↑` / `W` | Jump (grounded only) |
+| `SHIFT` / `↓` / `S` | The rover's signature ability, which spends energy from the battery bar |
+
+| Rover | `SHIFT` ability | Energy |
+| --- | --- | --- |
+| Sojourner | **Airbag Bounce**: one high bounce per landing, on the ground or in mid-air. Its normal hop is short. | 15% per bounce; magnetic dust drains 15% |
+| Spirit | **Trench-Scrape Slide**: hold to slide under obstacles; the hitbox halves at the feet. Also `E` / hold `SPACE` to boost. | 15% per slide; boost drains while held; batteries refill |
+| Opportunity | **Solar Wind Boost**: a 7 s horizontal burst at 2.5× speed, then a 3 s recharge. Wind-gust zones ready it. | 30% per boost; each gust recharges 40% |
+
+All rovers recharge at 2.5%/s from solar power; Spirit doesn't recharge while sliding. A low battery only refuses the ability, showing "LOW POWER" on the bar; it never causes failure.
 
 ## Project structure
 
 ```
-index.html              entry point: Phaser CDN + modular scripts + DOM UI layer
-css/style.css           VT323 font, HUD, terminals, quiz, codex (z-index 10 above the canvas)
-js/main.js              Phaser config (WEBGL, 1280x720, pixelArt, roundPixels, arcade)
-js/scenes/BootScene.js  preloads assets from AssetManifest, registers animations
-js/scenes/GameScene.js  gameplay, physics, deterministic LEVEL_MAP, slow-mo, particles, FX
-js/UIController.js      all DOM UI: HUD, tutorials, fragments, terminals, quiz, codex
-js/ContentDatabase.js   every narrative string, verbatim from game_content_script_spirit_level.md
-js/AssetManifest.js     AUTO-GENERATED frame sizes and URLs (do not edit)
-assets/                 game-ready PNGs produced by tools/build_assets.py
-tools/                  raster asset pipeline (Python)
+index.html                 entry point: Phaser CDN + scripts + DOM UI layer
+css/style.css              VT323 font, menu, HUD, terminals, quiz, codex
+js/main.js                 Phaser config + app flow (menu first, loader, mission launch)
+js/scenes/BootScene.js     loads shared sprites + all level JSON, reports progress to the menu
+js/scenes/GameScene.js     data-driven mission runtime (all three rovers)
+js/core/LevelSchema.js     level validator (also used by the Node build)
+js/core/LevelManager.js    builds terrain/hazards/landmarks from level JSON; spatial queries
+js/core/Abilities.js       rover -> exclusive ability registry (bounce / slide / boost)
+js/core/TimeCoordinator.js slow-motion reasons with precedence (tutorial > fragment)
+js/core/SaveStore.js       versioned save, best progress, fastest clear, Codex unlocks
+js/core/PixelTextures.js   procedural pixel textures for the Sojourner/Opportunity worlds
+js/UIController.js         DOM UI: menu cards, HUD, tutorials, fragments, terminals, quiz, codex
+js/ContentDatabase.js      UI chrome strings only
+js/data/GameData.js        GENERATED: mission cards + "Did you know?" facts
+js/AssetManifest.js        GENERATED: raster sprite sizes
+assets/data/levels/*.json  GENERATED: one compiled level per mission
+content/*.json             reviewed mission text + correction ledger + menu facts (source, not deployed)
+tools/                     asset pipelines, level compiler + reachability simulations, checks
 ```
 
-## Asset pipeline
+## Build tools
 
-None of the game's entities are drawn procedurally. Each sprite is sampled from the raw art in the repo root by `tools/build_assets.py`:
-
-| Output | Source | Method |
-| --- | --- | --- |
-| `sprites/rover.png` (10 frames: idle, run, jump, slide, damage) | `Rover_rush Spritesheet.jpeg` | Removes the checkerboard baked into the JPEG (fixed 60 px grid + flatness test so the silver mast survives), median-block downsample, shared 40-colour palette |
-| `sprites/fragment.png` (6-frame spin) | `Hazards&checkpoint_animations.mp4` frames 1–16 | Cyan key against the red-dominant Mars backdrop |
-| `sprites/dustdevil.png` (4-frame spin) | video frames 35–41 | Pan-compensated clean background plate + GrabCut |
-| `sprites/silica.png`, `gate.png`, `sandtrap.png`, `ground.png` | video frames 67, 127, 88, 121 | GrabCut seeded by saturation / known regions |
-| `sprites/battery.png` | `Solar battery.png` | Native alpha, downsampled |
-| `ui/energy_full.png`, `energy_empty.png` | `Energy bar.jpeg` (WebP) | Checkerboard removed; "empty" is a darkened copy of the same pixels |
-| `bg/sky.png`, `mountains.png`, `dunes.png` | `Mars.jpg` | Mountain silhouette key; mountains inpainted out of the sky layer |
-| `ui/heart*.png`, `sprites/px4.png` | *(no source art)* | 4×4 pixel-block grid fallback |
-
-To rebuild (needs `ffmpeg` on PATH; the output is deterministic):
-
-```bash
-pip install -r tools/requirements.txt
-```
+These need Node 18+ and Python 3 with `numpy pillow scipy opencv-python-headless`, plus `ffmpeg` for the sprite stages. Each one is deterministic.
 
 ```bash
 python3 tools/build_assets.py
 ```
 
-## Level map (30,000 units, no RNG)
+```bash
+python3 tools/build_sojourner.py
+```
 
-`LEVEL_MAP` in `GameScene.js` places everything by percentage of the 30,000-unit level (2.5× the original 12,000), so the whole layout spreads out evenly. Hazard sizes are absolute: crater and overhang widths, sand length and devil patrol range stay the same at any level length. The beats from the PRD are tagged `[PRD]`:
+```bash
+node tools/build_levels.mjs
+```
 
-- 8% Fragment 1
-- 18% battery
-- 25% Checkpoint 1
-- 30% dust devil
-- 41% Fragment 4
-- 50% Checkpoint 2
-- 55% Troy sand trap
-- 62% embedded silica (slide over it to get Fragment 7)
-- 75% Checkpoint 3
-- 82% Fragment 9
-- 100% final gate, then the decryption quiz
+```bash
+node tools/check_content.mjs
+```
 
-The 10 memory fragments sit 7–13% apart (2,100–3,900 units). Fragment 2 floats high and needs a held jump. Fixed filler placements (more craters, overhangs, devils and batteries) teach and reinforce each mechanic.
+```bash
+node tools/render_ledger.mjs
+```
 
-Each tutorial fires 420 units before the first hazard of its kind.
+- **`build_assets.py`** builds the Spirit/Opportunity sprites, hazards and backgrounds from the supplied art.
+- **`build_sojourner.py`** builds the Sojourner sheet + clip manifest from `Sojourner_sprite sheet.jpeg` and `Sojourner_animations.mp4`.
+- **`build_levels.mjs`** compiles content + layouts → level JSON, runs schema checks and trajectory simulations, and fails on any unreachable route.
+- **`check_content.mjs`** checks the wording against the scripts and ledger, counts, the 12-word fragment limit, quiz references, sources, and removal of V1 text.
+- **`render_ledger.mjs`** renders the correction ledger → `docs/content-corrections.md`.
 
-Time dilation has two profiles, both eased in and out smoothly:
+`build_levels.mjs` proves each course is fair. For example:
+- Sojourner's hop clears every pebble but no boulder.
+- Its wide flood-plain channels can't be crossed by a ground bounce but can by SPACE then a delayed SHIFT.
+- Opportunity's wide Endurance gaps need the boost, and each one has a wind-gust zone before it.
+- The storm section never depends on the boost.
+- Every energy budget holds.
 
-| Trigger | Speed | Ease time | Duration |
-| --- | --- | --- | --- |
-| Tutorial | 0.5× | 400 ms | until the hazard is cleared |
-| Memory fragment | 0.85× | 200 ms | 2 s of real time |
+## Content and accuracy
 
-Arcade physics is stepped manually once per rendered frame, using `delta / world.timeScale`. Arcade's default fixed-step mode would skip frames in slow motion and judder. Passing the quiz unlocks the Codex on the main menu (saved in `localStorage`).
+The mission text comes from `rover_rush_{sojourner,spirit,opportunity}_script.md`. Every change made for scientific accuracy is listed with its official NASA source in [docs/content-corrections.md](docs/content-corrections.md). Examples:
+- Sojourner never jumped; the Airbag Bounce is inspired by Pathfinder's landing airbags.
+- Spirit's last contact was March 2010, and its mission formally ended in May 2011.
+- Opportunity's final contact came during a planet-wide dust storm that blocked sunlight.
+
+Each Codex lists its sources. SYSTEM LOG entries are dramatizations, and Opportunity's course distance is narrative scale.
 
 ## Asset licensing note
 
-`Mars.jpg`, `Solar battery.png` and `Energy bar.jpeg` are stock-site preview images that carry faint watermarks (Adobe Stock / pngtree). Downsampling hides most of the watermark, but a trace is still visible in the sky. License or replace these files before a public release, then rerun the pipeline.
+`Mars.jpg`, `Solar battery.png` and `Energy bar.jpeg` are stock-site preview images with faint watermarks (Adobe Stock / pngtree). License or replace them before a public release, then rerun `tools/build_assets.py`.

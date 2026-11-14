@@ -56,8 +56,8 @@ export function build() {
         missionDates: { landing: 'July 4, 1997', timeConvention: 'Earth calendar date (UTC)' },
         sourceScript: c.sourceScript, sources,
         rover: sojournerRover(),
-        physics: physics({ ...PHYS }),
-        ability: { id: 'airbagBounce', params: { bounceVelocity: ABILITY.bounceVelocity, charges: ABILITY.charges, airbagFxMs: 450 } },
+        physics: physics({ ...PHYS, energy: { max: 100, regenPerSec: 2.5, jumpCost: 0, dustDrain: 15 } }),
+        ability: { id: 'airbagBounce', params: { bounceVelocity: ABILITY.bounceVelocity, charges: ABILITY.charges, airbagFxMs: 450, energyCost: 15 } },
         world: { length: LENGTH, groundY: GROUND_Y, startX, finishX, spawnX: 380, seed: 1997, killY: GROUND_Y + 90 },
         intro: { type: 'pathfinderLanding', label: 'Condensed landing reenactment', landerX: 150, rampTopX: 250, rampBottomX: 330, rampDeg: 20, bounces: 4 },
         terrain: { ground, platforms: [] },
@@ -71,7 +71,7 @@ export function build() {
         codex: { ...c.codex, sources: codexSources(sources) },
         theme: { id: 'ares', palette: ['#8c7d70', '#a69688', '#594d42'], sky: '#d9a35b' },
         storm: null,
-        hud: { energy: false, ability: 'AIRBAGS' },
+        hud: { energy: true, ability: 'AIRBAGS' },
     };
 }
 
@@ -156,6 +156,13 @@ export function verify(level) {
         if (!reach) fail.push(`${f.id}: height ${h} not reachable by bounce`);
     }
     out.push(`fragments: 10 placed (${level.pickups.fragments.filter((f) => H(f) > 60).length} on bounce arcs)`);
+    // energy budget: every mandatory bounce must be affordable from start energy + solar regen over the run
+    const E = level.physics.energy, cost = A.energyCost;
+    const needed = boulders.length + level.hazards.filter((z) => z.type === 'magneticDust').length + gaps.length;
+    const runS = (level.world.finishX - level.world.spawnX) / P.cruiseSpeed;
+    const budget = E.max + E.regenPerSec * runS;
+    if (budget < 1.3 * needed * cost) fail.push(`energy budget ${budget.toFixed(0)} < 1.3 x ${needed} bounces x ${cost}`);
+    out.push(`energy: ${needed} required bounces x ${cost}% = ${needed * cost}% vs ${budget.toFixed(0)}% available over the run (start ${E.max} + ${E.regenPerSec}%/s x ${runS.toFixed(0)} s)`);
     if (fail.length) throw new Error('Sojourner verify failed:\n  ' + fail.join('\n  '));
     return out;
 }

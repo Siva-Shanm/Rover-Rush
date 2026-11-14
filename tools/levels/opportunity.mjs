@@ -63,8 +63,8 @@ export function build() {
         missionDates: { landing: 'Jan. 24, 2004', timeConvention: 'PST (Jan. 25 UTC)' },
         sourceScript: c.sourceScript, sources,
         rover: opportunityRover(),
-        physics: physics({ ...PHYS }),
-        ability: { id: 'solarWindBoost', params: { ...BOOST, spiritBoostSpeed: SPIRIT_BOOST.speed, spiritBoostMs: SPIRIT_BOOST.durationMs } },
+        physics: physics({ ...PHYS, energy: { max: 100, regenPerSec: 2.5, jumpCost: 0, gustCharge: 40 } }),
+        ability: { id: 'solarWindBoost', params: { ...BOOST, spiritBoostSpeed: SPIRIT_BOOST.speed, spiritBoostMs: SPIRIT_BOOST.durationMs, energyCost: 30 } },
         world: { length: LENGTH, groundY: GROUND_Y, startX, finishX, spawnX: 140, seed: 2018, killY: GROUND_Y + 170 },
         terrain: { ground, platforms: [] },
         safeZones,
@@ -80,7 +80,7 @@ export function build() {
         codex: { ...c.codex, sources: codexSources(sources) },
         theme: { id: 'meridiani', palette: ['#b8925a', '#d6b98a', '#7a5a3a'], sky: '#c9a06a' },
         storm: { startP: 0.75, maxOverlay: 0.65, color: '#7a4a1e' },
-        hud: { energy: false, ability: 'BOOST', distanceLabel: 'Narrative scale' },
+        hud: { energy: true, ability: 'BOOST', distanceLabel: 'Narrative scale' },
     };
 }
 
@@ -139,6 +139,11 @@ export function verify(level) {
         else if (seg.top - f.y > level.rover.pickupHeight - 10) fail.push(`${f.id}: too high to collect while driving`);
     }
     out.push('fragments: all 10 above solid ground at driving height');
+    // energy: a gust zone (which recharges + readies the boost) precedes every wide gap, so the
+    // required boost is always affordable: cost <= gust charge.
+    const E = level.physics.energy;
+    if (A.energyCost > E.gustCharge) fail.push(`boost cost ${A.energyCost} exceeds gust recharge ${E.gustCharge}`);
+    out.push(`energy: boost costs ${A.energyCost}%, each gust zone recharges ${E.gustCharge}% before every wide gap; solar regen ${E.regenPerSec}%/s`);
     if (fail.length) throw new Error('Opportunity verify failed:\n  ' + fail.join('\n  '));
     return out;
 }

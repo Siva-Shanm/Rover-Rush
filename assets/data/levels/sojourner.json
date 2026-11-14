@@ -171,14 +171,21 @@
   "jumpHoldMaxMs": 0,
   "cruiseSpeed": 240,
   "gravity": 800,
-  "jumpVelocity": 202
+  "jumpVelocity": 202,
+  "energy": {
+   "max": 100,
+   "regenPerSec": 2.5,
+   "jumpCost": 0,
+   "dustDrain": 15
+  }
  },
  "ability": {
   "id": "airbagBounce",
   "params": {
    "bounceVelocity": 454,
    "charges": 1,
-   "airbagFxMs": 450
+   "airbagFxMs": 450,
+   "energyCost": 15
   }
  },
  "world": {
@@ -686,7 +693,7 @@
  },
  "storm": null,
  "hud": {
-  "energy": false,
+  "energy": true,
   "ability": "AIRBAGS"
  }
 }

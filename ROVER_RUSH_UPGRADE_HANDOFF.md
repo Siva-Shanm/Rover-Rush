@@ -10,7 +10,7 @@ Working handoff for the three-mission upgrade (Sojourner, Spirit V2, Opportunity
 
 | Field | Value |
 | --- | --- |
-| Last updated | 2026-11-14, M3–M6 playable: all 3 missions complete end-to-end in browser autopilot runs; acceptance suite (M8) next |
+| Last updated | 2026-11-14: all milestones implemented; energy bar + energy-gated abilities added for Sojourner/Opportunity (user request) |
 | PRD | Not in the checkout. It was attached to the session as `Rover_Rush_-_Final_Claude_Code_Master_Upgrade_Prompt.md`. **Re-attach it when resuming.** |
 | Branch | `claude/clever-galileo-t5dz1n` (pushed to origin; `main` receives merges on request) |
 | Starting commit | `b15ac95` (merge of `origin/main`: new scripts and Sojourner art) |
@@ -72,7 +72,7 @@ Supporting test tooling (not in repo): Playwright + Chromium are preinstalled in
 - [x] M5: Sojourner level: Airbag Bounce, intro reenactment, boulders/channel, reachability sim
 - [x] M6: Opportunity level: Solar Wind Boost, Eagle/Endurance/storm layout, gusts
 - [x] M7: Menu: rover cards, facts, loader, personal bests
-- [ ] M8: Integration: acceptance checks, browser playthroughs, report
+- [~] M8: Integration (full acceptance suite written but not run to completion, stopped at the user's request to save usage): acceptance checks, browser playthroughs, report
 
 ## Sojourner frame map (M1)
 
@@ -118,22 +118,18 @@ Tuning decisions:
 - Walking off the edge and then bouncing mid-air is also a valid airborne route.
 - Opportunity: boost 750 px/s for 7000 ms, recharge 3000 ms. These come from Spirit's legacy boost (450 px/s, 4651 ms from a full battery) × 1.5. Course is 48000 (1.6×).
 
-## Next action
+## User requests during M8
 
-M8 acceptance suite. Write `<scratchpad>/accept.js` (Playwright) covering:
-- Spirit boost speed/duration measurement vs Opportunity boost; Spirit headroom slide exit.
-- Sojourner: charge, SPACE+SHIFT, landing reset; clip playback per state.
-- Opportunity: horizontal-only boost, recharge, one-use gusts.
-- Nested slow motion; checkpoint freeze/resume.
-- Saves: progress cap at 99%, completion, fastest of two clears, migration, quiz skipped.
-- Menu: keyboard navigation, load error + retry. Restart cycles (listener/texture counts). Storm thresholds.
+- **Energy for all rovers.** Sojourner and Opportunity use Spirit's raster energy bar.
+  - Bounce costs 15% and boost costs 30%; each is refused below its cost with a LOW POWER message.
+  - Magnetic dust drains 15%; wind gusts recharge 40%.
+  - Build-time budget checks: Sojourner needs 13 bounces (195%) against 284% available.
+  - Verified in-browser (energy_check.js): no errors.
+- **Usage budget.** Do NOT rerun full levels or the full acceptance suite just because fragments were missed.
 
-Then update the README and the final report.
+## Next action (optional)
 
-Bot harness (scratchpad, not in repo):
-- `autopilot.js` is injected into the page. It drives real KeyboardEvents from postupdate.
-- `run_mission.js <scratch> <id>` plays a full mission, answering terminals and the quiz (one deliberate wrong answer).
-- `smoke.js` checks menu → each mission.
+Run `<scratchpad>/accept.js` only if the user asks. It covers schema/isolation, Spirit boost + headroom, Opportunity boost/gusts/storm, Sojourner bounce rules + clips, time precedence, checkpoint freeze, saves/migration, menu keyboard, restart cycles, load retry and blocked storage. Its Sojourner/Opportunity energy expectations need `g.energy = 100` before ability calls (already set in energy_check.js).
 
 ## Commands run / results
 

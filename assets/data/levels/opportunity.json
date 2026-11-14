@@ -78,7 +78,13 @@
   "jumpHoldMaxMs": 300,
   "cruiseSpeed": 345,
   "gravity": 800,
-  "jumpVelocity": 336
+  "jumpVelocity": 336,
+  "energy": {
+   "max": 100,
+   "regenPerSec": 2.5,
+   "jumpCost": 0,
+   "gustCharge": 40
+  }
  },
  "ability": {
   "id": "solarWindBoost",
@@ -87,7 +93,8 @@
    "durationMs": 7000,
    "rechargeMs": 3000,
    "spiritBoostSpeed": 450,
-   "spiritBoostMs": 4651
+   "spiritBoostMs": 4651,
+   "energyCost": 30
   }
  },
  "world": {
@@ -646,7 +653,7 @@
   "color": "#7a4a1e"
  },
  "hud": {
-  "energy": false,
+  "energy": true,
   "ability": "BOOST",
   "distanceLabel": "Narrative scale"
  }

@@ -355,8 +355,27 @@ class GameScene extends Phaser.Scene {
 
     onBoost() { this.thruster.explode(12); }
 
+    /** Spend energy for an ability; false (and nothing spent) if the battery is too low. */
+    spendEnergy(cost) {
+        if (!this.P.energy || this.energy < cost) return false;
+        this.energy -= cost;
+        this.pushHUD(false, false);
+        return true;
+    }
+
+    /** Refill from an energy source ('gust': wind-cleaned panels). */
+    gainEnergy(source) {
+        const E = this.P.energy;
+        const amt = source === 'gust' ? (E.gustCharge || 0) : 0;
+        if (!amt) return;
+        this.energy = Math.min(E.max, this.energy + amt);
+        this.floatText(this.rover.x, this.rover.y - 120, `+${amt} SOLAR CHARGE`, '#ffd23f');
+    }
+
     lowPowerFeedback() {
-        this.floatText(this.rover.x, this.rover.y - 80, 'LOW POWER: SLIDE OFFLINE', '#ff5a4e');
+        const a = this.ability.hud();
+        this.lowPowerUntil = this.realTime + 1200;
+        this.floatText(this.rover.x, this.rover.y - 80, `LOW POWER: ${a.label} NEEDS ${this.L.ability.params.energyCost}%`, '#ff5a4e');
         UI.flashEnergy();
     }
 
@@ -420,10 +439,13 @@ class GameScene extends Phaser.Scene {
         // Spirit-only legacy energy + boost (E / hold SPACE) — preserved baseline
         const E = this.P.energy;
         if (E) {
-            const LB = this.P.legacyBoost;
-            const want = this.keys.e.isDown || this.spaceHoldMs > LB.holdSpaceMs;
-            this.legacyBoosting = want && this.energy > 0;
-            if (this.legacyBoosting) { this.energy = Math.max(0, this.energy - LB.drainPerSec * dt); this.tutorialInput('E'); }
+            const LB = this.P.legacyBoost;           // Spirit only (E / hold SPACE)
+            if (LB) {
+                const want = this.keys.e.isDown || this.spaceHoldMs > LB.holdSpaceMs;
+                this.legacyBoosting = want && this.energy > 0;
+                if (this.legacyBoosting) { this.energy = Math.max(0, this.energy - LB.drainPerSec * dt); this.tutorialInput('E'); }
+            }
+            // solar trickle charge (paused while Spirit slides so it can't refund the cost)
             if (!this.ability.isSliding()) this.energy = Math.min(E.max, this.energy + E.regenPerSec * dt);
         }
 
@@ -563,7 +585,8 @@ class GameScene extends Phaser.Scene {
         this.smoke.explode(8, this.rover.x - 10, this.roverFootY() - 40);
         this.after(140, () => this.sparks.explode(10, this.rover.x + 20, this.roverFootY() - 50));
         this.cam.shake(220, this.L.rover.id === 'sojourner' ? 0.004 : 0.008);
-        if (source === 'devil' && this.P.energy) this.energy = Math.max(0, this.energy - this.P.energy.devilDrain);
+        if (source === 'devil' && this.P.energy && this.P.energy.devilDrain) this.energy = Math.max(0, this.energy - this.P.energy.devilDrain);
+        if (source === 'magneticDust' && this.P.energy && this.P.energy.dustDrain) this.energy = Math.max(0, this.energy - this.P.energy.dustDrain);   // magnetic dust drains power
         this.pushHUD(false, false);
         if (this.hp <= 0) this.die();
     }
@@ -595,7 +618,7 @@ class GameScene extends Phaser.Scene {
         const rr = this.roverRect();
         for (const g of this.levelManager.gusts) {
             const inside = Phaser.Geom.Rectangle.Overlaps(rr, g.rect);
-            if (inside && !g.inside && this.ability.gust(g.h.id)) this.floatText(this.rover.x, this.rover.y - 90, 'WIND GUST: PANELS CLEANED', '#bff4ff');
+            if (inside && !g.inside && this.ability.gust(g.h.id)) this.floatText(this.rover.x, this.rover.y - 90, 'WIND GUST: PANELS CLEANED', '#bff4ff');   // gust() also recharges energy
             g.inside = inside;
         }
     }
@@ -727,7 +750,7 @@ class GameScene extends Phaser.Scene {
     pushHUD(inSand, boosting) {
         let status = '';
         const a = this.ability.hud();
-        if (this.ability.blocked) status = 'LOW POWER: SLIDE NEEDS 15%';
+        if (this.ability.blocked || this.realTime < (this.lowPowerUntil || 0)) status = `LOW POWER: ${a.label} NEEDS ${this.L.ability.params.energyCost}%`;
         else if (this.silicaHint) status = 'SILICA DETECTED: SLIDE [SHIFT] TO SCRAPE';
         else if (inSand && !this.ability.isSliding() && !this.legacyBoosting) status = 'SOFT SAND: TRACTION -70%';
         else if (this.stormQ > 0) status = 'DUST STORM: SUNLIGHT FADING';
