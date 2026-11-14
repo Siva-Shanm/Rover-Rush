@@ -101,8 +101,11 @@ const Abilities = (() => {
             if (this.usedGusts.has(zoneId)) return false;
             if (this.state === 'ready') { this.usedGusts.add(zoneId); this.scene.gainEnergy('gust'); return true; }
             this.usedGusts.add(zoneId);
+            // During an active burst the gust only queues readiness: refilling here would
+            // instantly overwrite the visible boost deduction on the battery gauge.
+            if (this.state === 'active') { this.queued = true; return true; }
             this.scene.gainEnergy('gust');
-            if (this.state === 'active') this.queued = true; else { this.state = 'ready'; this.left = 0; }
+            this.state = 'ready'; this.left = 0;
             return true;
         }
         hud() {
