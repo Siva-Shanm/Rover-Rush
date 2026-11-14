@@ -220,7 +220,15 @@ def main():
         q = np.asarray(Image.fromarray(cell[..., :3]).quantize(palette=pal, dither=Image.Dither.NONE).convert('RGB'))
         cell[..., :3] = np.where(cell[..., 3:] > 0, q, 0)
 
-    sheet_out = np.concatenate([c for _, _, c, _ in cells], axis=1)
+    # pack into a grid: a single 79-frame row would be ~15500 px wide, beyond the
+    # WebGL max texture size on many GPUs (8192). Phaser's spritesheet loader reads
+    # uniform grids row-major, so frame indices are unchanged.
+    cols = 10
+    rows = (len(cells) + cols - 1) // cols
+    sheet_out = np.zeros((rows * cell_h, cols * cell_w, 4), np.uint8)
+    for i, (_, _, c, _) in enumerate(cells):
+        r_, c_ = divmod(i, cols)
+        sheet_out[r_ * cell_h:(r_ + 1) * cell_h, c_ * cell_w:(c_ + 1) * cell_w] = c
     Image.fromarray(sheet_out, 'RGBA').save(OUT_PNG, optimize=True)
 
     # --- foot anchor: wheel bottom of the idle frame, relative to the cell
@@ -231,7 +239,7 @@ def main():
         'texture': 'sojourner',
         'image': 'assets/sprites/sojourner.png',
         'frameWidth': cell_w, 'frameHeight': cell_h,
-        'uniformGrid': True,
+        'uniformGrid': True, 'columns': 10,
         'scaleFromVideo': round(scale, 4),
         'anchor': {'panelTop': [anchor_cx, anchor_cy], 'footY': foot_y},
         'frames': [{'index': i, 'name': n, 'state': st, 'source': src} for i, (st, n, _, src) in enumerate(cells)],

@@ -30,6 +30,13 @@ const GameData = Object.freeze({
       "texture": "rover"
     }
   ],
+  "textures": {
+    "sojourner": {
+      "url": "assets/sprites/sojourner.png",
+      "frameWidth": 196,
+      "frameHeight": 163
+    }
+  },
   "facts": [
     {
       "id": "fact-soj-name",

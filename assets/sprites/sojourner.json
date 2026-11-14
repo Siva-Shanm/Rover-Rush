@@ -4,6 +4,7 @@
   "frameWidth": 196,
   "frameHeight": 163,
   "uniformGrid": true,
+  "columns": 10,
   "scaleFromVideo": 0.6907,
   "anchor": {
     "panelTop": [

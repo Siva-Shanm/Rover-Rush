@@ -72,10 +72,11 @@ class TimeCoordinator {
     apply(s) {
         this.speed = s;
         const sc = this.scene;
-        sc.physics.world.timeScale = 1 / s;
-        sc.time.timeScale = s;
-        sc.tweens.timeScale = s;
-        sc.anims.globalTimeScale = s;
-        this.emitters.forEach((em) => { if (em && em.active !== false) em.timeScale = s; });
+        // systems may already be torn down during scene shutdown: guard each one
+        if (sc.physics && sc.physics.world) sc.physics.world.timeScale = 1 / s;
+        if (sc.time) sc.time.timeScale = s;
+        if (sc.tweens) sc.tweens.timeScale = s;
+        if (sc.anims) sc.anims.globalTimeScale = s;
+        this.emitters.forEach((em) => { if (em && em.scene) em.timeScale = s; });
     }
 }

@@ -33,7 +33,7 @@ const PixelTextures = (() => {
     const THEMES = {
         ares: {   // Ares Vallis: grey-brown flood plain, butterscotch sky
             rock: [0x3e342b, 0x594d42, 0x8c7d70, 0xa69688, 0xc4b6a6],
-            soil: [0x6e5d4f, 0x8c7d70, 0x9c8b7c, 0xa69688],
+            soil: [0x594d42, 0x7a6a5c, 0x8c7d70, 0xa69688],
             sky: [0xc98a45, 0xd9a35b, 0xe6b877, 0xf0cb92],
             ridge: [0x8a6a50, 0x9c7a5c],
             rim: [0x7a6250, 0x8c7360],
@@ -119,30 +119,44 @@ const PixelTextures = (() => {
         });
     }
 
-    /** Tileable ground strip: top crust, soil body, scattered stones, darker base. */
+    /** Tileable ground strip: bright crust, banded strata, outlined cobbles, darker base. */
     function ground(scene, theme, style) {
         const key = `${VERSION}:${theme}:ground:${style || 'plain'}`;
         const T = THEMES[theme];
         const W = 96, H = 64;
         return bake(scene, key, W, H, ({ px, rect }) => {
             const r = rng(theme.length * 999 + (style || 'p').length * 17);
-            const soil = style === 'craterFloor' ? T.pit.concat(T.soil.slice(0, 2)) : T.soil;
-            rect(0, 0, W, H, soil[1]);
+            const soil = style === 'craterFloor' ? [T.pit[1], T.soil[0], T.soil[0], T.soil[1]] : T.soil;
+            // strata: alternating bands with jagged (periodic) seams, darker with depth
+            const seam = (x, k) => Math.round(2 * Math.sin((x / W) * Math.PI * 2 * (k + 2) + k));
             for (let y = 0; y < H; y++) {
                 for (let x = 0; x < W; x++) {
-                    if ((x + y) % 2 === 0 && r() < 0.18) px(x, y, soil[(y < 10) ? 3 : 0]);
-                    if (y > 44 && (x + y) % 2 === 1 && r() < 0.35) px(x, y, soil[0]);
+                    const band = Math.floor((y + seam(x, Math.floor(y / 12))) / 12);
+                    let c = band % 2 === 0 ? soil[2] : soil[1];
+                    if (y > 40) c = band % 2 === 0 ? soil[1] : soil[0];
+                    if (y > 54) c = soil[0];
+                    px(x, y, c);
+                    if ((x + y) % 2 === 0 && r() < 0.12) px(x, y, y < 20 ? soil[3] : soil[0]);   // sparse checker dither
                 }
             }
-            if (style === 'outcrop') {       // pale horizontal sediment bands (Meridiani outcrops)
+            if (style === 'outcrop') {       // pale horizontal sediment bands (Meridiani layered outcrops)
                 for (let b = 6; b < H; b += 7) { rect(0, b, W, 2, T.rock[4]); rect(0, b + 2, W, 1, T.rock[1]); }
             }
-            // stones (periodic in x so the tile wraps)
-            for (let i = 0; i < 14; i++) {
-                const sx = Math.floor(r() * (W - 4)), sy = 8 + Math.floor(r() * (H - 16));
-                rect(sx, sy, 3, 2, T.rock[2]); px(sx, sy, T.rock[3]); px(sx + 2, sy + 1, T.rock[0]);
+            // outlined cobbles: top-left highlight, lower-right shadow (wrap horizontally)
+            for (let i = 0; i < 16; i++) {
+                const sw = 3 + Math.floor(r() * 4), sh = 2 + Math.floor(r() * 3);
+                const sx = Math.floor(r() * W), sy = 7 + Math.floor(r() * (H - 14));
+                for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) {
+                    const edge = y === 0 || y === sh - 1 || x === 0 || x === sw - 1;
+                    const corner = (y === 0 || y === sh - 1) && (x === 0 || x === sw - 1);
+                    if (corner) continue;
+                    const c = edge ? OUTLINE : (x <= 1 && y <= 1 ? T.rock[4] : (x >= sw - 2 || y >= sh - 2 ? T.rock[1] : T.rock[2]));
+                    px((sx + x) % W, sy + y, c);
+                }
             }
-            rect(0, 0, W, 2, T.rock[3]); rect(0, 2, W, 1, T.rock[4]); rect(0, 3, W, 1, OUTLINE);
+            rect(0, 0, W, 1, T.rock[4]); rect(0, 1, W, 2, T.rock[3]);
+            for (let x = 0; x < W; x += 2) px(x + (x % 4 === 0 ? 1 : 0), 3, T.rock[2]);
+            rect(0, 4, W, 1, OUTLINE);
         });
     }
 

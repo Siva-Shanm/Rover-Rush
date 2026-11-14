@@ -79,22 +79,28 @@ class LevelManager {
         this.groundGroup = s.physics.add.staticGroup();
         const segs = this.L.terrain.ground;
         const bottom = this.L.world.killY + 400;
+        const CHUNK = 2048;   // visual tiles are chunked: one huge TileSprite exceeds max texture size
         segs.forEach((g, i) => {
             const w = g.x1 - g.x0;
-            let ts;
-            if (this.raster) {
-                const gh = AssetManifest.images.ground.height;
-                ts = s.add.tileSprite(g.x0, g.top, w, gh * 2, 'ground').setOrigin(0, 0).setDepth(5);
-                ts.tilePositionX = g.x0 % AssetManifest.images.ground.width;
-            } else {
-                const key = PixelTextures.ground(s, this.theme, g.style || 'plain');
-                ts = s.add.tileSprite(g.x0, g.top, w, bottom - g.top, key).setOrigin(0, 0).setDepth(5);
-                ts.tilePositionX = g.x0 % s.textures.get(key).getSourceImage().width;
+            for (let cx = g.x0; cx < g.x1; cx += CHUNK) {
+                const cw = Math.min(CHUNK, g.x1 - cx);
+                let ts;
+                if (this.raster) {
+                    const gh = AssetManifest.images.ground.height;
+                    ts = s.add.tileSprite(cx, g.top, cw, gh * 2, 'ground').setOrigin(0, 0).setDepth(5);
+                    ts.tilePositionX = cx % AssetManifest.images.ground.width;
+                } else {
+                    const key = PixelTextures.ground(s, this.theme, g.style || 'plain');
+                    ts = s.add.tileSprite(cx, g.top, cw, bottom - g.top, key).setOrigin(0, 0).setDepth(5);
+                    ts.tilePositionX = cx % s.textures.get(key).getSourceImage().width;
+                }
             }
-            s.physics.add.existing(ts, true);
-            this.groundGroup.add(ts);
+            // one invisible static body per segment (no texture -> any width, no internal seams)
+            const bodyH = this.raster ? AssetManifest.images.ground.height * 2 : bottom - g.top;
+            const zone = s.add.zone(g.x0, g.top, w, bodyH).setOrigin(0, 0);
+            s.physics.add.existing(zone, true);
+            this.groundGroup.add(zone);
             this.solidRects.push(new Phaser.Geom.Rectangle(g.x0, g.top, w, bottom - g.top));
-            // pit to the right of this segment
             const next = segs[i + 1];
             if (next && next.x0 > g.x1) this.buildPit(g.x1, next.x0, Math.max(g.top, next.top));
         });

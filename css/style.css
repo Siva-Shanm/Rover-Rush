@@ -263,3 +263,49 @@ img { image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ================= Three-mission upgrade ================= */
+.panel.wide { width: calc(var(--u) * 1120); max-height: calc(var(--u) * 690); }
+.menu h1 { font-size: calc(var(--u) * 84); }
+.loader { margin: calc(var(--u) * 10) auto calc(var(--u) * 6); width: calc(var(--u) * 560); font-size: calc(var(--u) * 24); color: var(--cyan); }
+.loader.bad { color: var(--bad); width: auto; }
+.loadbar { height: calc(var(--u) * 12); border: calc(var(--u) * 2) solid var(--cyan-dim); margin-top: calc(var(--u) * 4); background: #061418; }
+.loadfill { height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--cyan) 0 calc(var(--u) * 8), #1aa8b4 calc(var(--u) * 8) calc(var(--u) * 12)); }
+.cards { display: flex; gap: calc(var(--u) * 18); justify-content: center; margin-top: calc(var(--u) * 14); }
+.card { display: flex; flex-direction: column; gap: calc(var(--u) * 8); width: calc(var(--u) * 330); }
+.card-main {
+    font-family: 'VT323', monospace; text-align: left; cursor: pointer;
+    display: flex; flex-direction: column; gap: calc(var(--u) * 4);
+    padding: calc(var(--u) * 14) calc(var(--u) * 16);
+    background: #120c10; color: var(--ink);
+    border: calc(var(--u) * 3) solid var(--amber);
+    box-shadow: 0 calc(var(--u) * 6) 0 #5a3410, 0 0 0 calc(var(--u) * 3) #000;
+}
+.card-main:hover, .card-main:focus-visible { background: #2a1a0c; outline: none; border-color: #fff; transform: translateY(calc(var(--u) * -3)); }
+.card-main:disabled { opacity: 0.55; cursor: progress; transform: none; }
+.card-title { font-size: calc(var(--u) * 44); color: var(--amber); line-height: 0.9; }
+.card-sub { font-size: calc(var(--u) * 24); color: #e8d2b0; }
+.card-ability { font-size: calc(var(--u) * 22); color: var(--cyan); }
+.card-rec { font-size: calc(var(--u) * 22); color: #cbb; }
+.btn.small { font-size: calc(var(--u) * 22); padding: calc(var(--u) * 3) calc(var(--u) * 14); box-shadow: 0 calc(var(--u) * 4) 0 var(--cyan-dim), 0 0 0 calc(var(--u) * 3) #000; }
+.fact { margin: calc(var(--u) * 18) auto 0; max-width: calc(var(--u) * 980); font-size: calc(var(--u) * 26); color: #f0e6d8; min-height: 2.3em; }
+.fact-tag { color: var(--amber); letter-spacing: calc(var(--u) * 2); }
+.fact-src { color: var(--cyan); margin-left: calc(var(--u) * 8); font-size: calc(var(--u) * 22); }
+.notes { margin: calc(var(--u) * 4) 0; padding-left: 1.2em; font-size: calc(var(--u) * 24); line-height: 1.2; }
+.notes a { color: var(--cyan); }
+.hud-time { font-size: calc(var(--u) * 26); color: #e8d2b0; }
+.progress-scale { color: #b9a; font-size: calc(var(--u) * 20); margin-left: calc(var(--u) * 8); }
+.ability { width: calc(var(--u) * 250); padding: calc(var(--u) * 4) calc(var(--u) * 8); background: rgba(10, 6, 14, 0.75); border: calc(var(--u) * 3) solid var(--cyan-dim); }
+.ability-label { font-size: calc(var(--u) * 22); color: var(--cyan); display: block; }
+.ability-state { font-size: calc(var(--u) * 24); color: #fff; }
+.ability-bar { height: calc(var(--u) * 8); background: #0a2026; margin-top: calc(var(--u) * 3); }
+.ability-fill { height: 100%; width: 100%; background: var(--cyan); }
+.ability[data-state="active"] { border-color: #ffd76a; box-shadow: 0 0 calc(var(--u) * 12) rgba(255, 215, 106, 0.6); }
+.ability[data-state="active"] .ability-fill { background: #ffd76a; }
+.ability[data-state="recharging"] .ability-fill, .ability[data-state="spent"] .ability-fill, .ability[data-state="blocked"] .ability-fill { background: #5a5a6a; }
+.intro { position: absolute; left: 50%; bottom: calc(var(--u) * 40); transform: translateX(-50%); display: flex; gap: calc(var(--u) * 18); align-items: center;
+    padding: calc(var(--u) * 8) calc(var(--u) * 18); background: var(--panel); border: calc(var(--u) * 3) solid var(--amber); pointer-events: auto; }
+.intro-label { font-size: calc(var(--u) * 30); color: var(--amber); letter-spacing: calc(var(--u) * 2); }
+.tutorial { pointer-events: auto; }
+.tutorial-note { font-size: calc(var(--u) * 24); color: #ffd9a8; margin: calc(var(--u) * -4) 0 calc(var(--u) * 10); }
+.tutorial-row { display: flex; gap: calc(var(--u) * 20); justify-content: center; align-items: center; }
